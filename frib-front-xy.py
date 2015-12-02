@@ -773,8 +773,9 @@ package("wxy"); generate()
 # Read in diagnostics for applied lattice fields 
 execfile("diag_lattice.py") 
 
-# Install conducting aperture on mesh 
-installconductors(aperture,dfill=largepos)
+# Install conducting aperture on mesh
+for i in aperture:
+	installconductors(i,dfill=largepos) # will trigger "list has no attribute" error if aperture is used in installconductors
 
 # Check that inputs are consistent with symmetries (errorcheck package function)
 checksymmetry()
