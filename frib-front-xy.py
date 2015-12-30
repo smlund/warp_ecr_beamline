@@ -2220,7 +2220,14 @@ CorrectionMode = 1 #set velocity correction method: 0 - no correction, 1 - dBdz 
 
 integratewarp = 0 # integrate ode using real-time warp data; 0: no, 1: yes
 
-execfile("env_ode_module.py")
+
+
+#execfile("env_ode_module.py")
+
+###!!! The envelope solver per se is functioning as things stand, but after each run all previous cgm files become
+###!!! identical to that of the latest run
+
+
 
 #plotodeterms(0)
 #plotwarpterms(0)
