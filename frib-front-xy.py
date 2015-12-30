@@ -2208,3 +2208,21 @@ printtimers()
 # Make sure that last plot is flushed from buffer
 fma() 
 
+
+
+
+
+
+## Module of the Multi-Species Envelope Model
+
+
+CorrectionMode = 1 #set velocity correction method: 0 - no correction, 1 - dBdz only, 2 - dBdz + d2Edz2
+
+integratewarp = 0 # integrate ode using real-time warp data; 0: no, 1: yes
+
+execfile("env_ode_module.py")
+
+#plotodeterms(0)
+#plotwarpterms(0)
+#termsodevswarp(0)
+#termsdifference(0)
