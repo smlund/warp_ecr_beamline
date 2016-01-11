@@ -3,6 +3,7 @@ Python input script for a Warp xy slice simulation of
 the FRIB front end.  For help and/or additional information contact:
 
      Steve Lund     lund@frib.msu.edu    (517) 908-7291
+     Jonathan Wong  wong@nscl.msu.edu    (517) 908-7465 
 
 For documentation see the Warp web-site:
 
@@ -33,12 +34,13 @@ top.pline1   = " "   # Add more info, if desired.
 setup()
 
 # Set runmaker - included in informational labels on output plots
-top.runmaker = "SMLund"
+top.runmaker = "Lund,Wong"
 
 # Beam parameters for simulation
 #
 #   Other than numerical parameters, the physical simulation is specified
 #   by the numbers input immediately below.  
+
 
 # --- Define species
 # 
@@ -47,32 +49,22 @@ top.runmaker = "SMLund"
 #       for us in U_species:
 #         us.ppzx()
 #
-#     Dictionaries also setup later. 
+#     Dictionaries also setup. 
 
-
-# Setup handling for species weights 
-# Via Dave Grote: need to setup scaling by hand for multi-species 
-#  top.wpid = nextpid()     # setup/allocate pid array on generate 
-#
-#  species.getw()  = s.w   gets weights of species  [equivalent to species.w] (top.wpid must be set to work)  
-#  species.getweights() returns product of species.sw*species.w 
-#
-#  put in adjustment using beforeloadrho() 
-# 
-#  beam.w * beam.sw = total weight = beam.getweights() 
-# 
-
+# --- Define charge states 
 U_charge_states = [33,34,25,26,27,28,29,30,31,32,35,36,37,38,39,40]
 O_charge_states = [1,2,3,4]
 
+# --- Create species consistent with charge states 
 U_species = [Species(type=Uranium,charge_state=i,name='U%d'%i) for i in U_charge_states]
 O_species = [Species(type=Oxygen, charge_state=i,name='O%d'%i) for i in O_charge_states]
 
+# --- Count species 
 U_ns = len(U_species) 
 O_ns = len(O_species) 
 
-# --- --- make abbreviated dictionary of species for later diagnostics 
-#         sp.keys()
+# --- Make abbreviated dictionary of species "sp" for cleaner use in later diagnostics 
+#       sp.keys()
 sp_U = {U_species[i].name:U_species[i] for i in range(U_ns)}
 sp_O = {O_species[i].name:O_species[i] for i in range(O_ns)}
 
@@ -80,15 +72,35 @@ sp = {}
 sp.update(sp_U)
 sp.update(sp_O)
 
-# --- Setup for variable particle weights on generate.
-#       Note: pid array elements hold particle properties and are consistently mirrored when particles scraped  
-#             nextpid() gets next pid array index 
+# --- Setup for variable particle weights in slice code. 
+#     Notes: 
+#      * All particles will carry individual weight set with v-velocity for full slice 
+#          consistency using pid arrays to store the initial axial velocity. This is 
+#          setup by hand in slice code for multi-species due to code structure.  
+#      * Way done will be consistent with axial velocity spread.   
+#      * Will be put in weight adjustment each step using beforeloadrho() 
+#      * pid array elements hold particle properties and are consistently 
+#          mirrored when particles scraped  
+#      * nextpid() gets next pid array index 
+#  
+# Via Dave Grote: need to setup scaling by hand for multi-species 
+#  top.wpid = nextpid()     # setup/allocate pid array on generate 
+#
+#  species.getw()  = s.w   gets weights of species  
+#                          [equivalent to species.w] (top.wpid must be set to work)  
+#  species.getweights() returns product of species.sw*species.w 
+# 
+#  beam.w * beam.sw = total weight = beam.getweights() 
+# 
 
-top.wpid = nextpid()       # set pid index for variable weights: will initialize on generate when set  
-uzp0pid  = nextpid() - 1   # set pid index to hold particle initial uz to scale weights (set after generate)  
+top.wpid = nextpid()       # pid index for variable weights: initialize on generate  
+uzp0pid  = nextpid() - 1   # pid index for initial uz to scale weights: initialize on generate  
 
-
-# --- --- assign species colors using values which may help distinguish on plots: target magenta/green
+# --- Assign species colors to help distinguish on plots: 
+#        target U species: magenta/green
+#        O        species: blue 
+#        High   U species: cyan 
+#        Low    U species: red 
 sp['O1'].color = "blue"
 sp['O2'].color = "blue"
 sp['O3'].color = "blue"
@@ -127,6 +139,7 @@ A_ref = A_ref/len(sp_target)
 Q_ref = Q_ref/len(sp_target)  
 
 m_ref = A_ref*amu 
+q_ref = Q_ref*echarge 
 
 # --- Set species properties for injection 
 #        The beam kinetic energy (ekin) and axial velocity (vbeam) should not both
@@ -137,7 +150,6 @@ m_ref = A_ref*amu
 #
 
 # --- --- unneutralized electric currents ... array elements corresponding to charge state arrays  
-mA = 1.e-3
 U_ibeam = array([0.210,0.205,0.035,0.051,0.068,0.088,0.115,0.150,0.175,0.192,0.178,0.142,0.110,0.072,0.043,0.031])*mA 
 O_ibeam = array([0.300,0.300,0.300,0.200])*mA 
 
@@ -148,9 +160,11 @@ U_ekin = array(U_charge_states)*SourceBias
 O_ekin = array(O_charge_states)*SourceBias 
 
 # --- --- ion temp
-#  Guilliaume:  ions likely 2-3 eV and electrons few - 100s of keV.  Ions not equilibrated with electrons.   
+#  Guilliaume:  Ions likely 2-3 eV and electrons few - 100s of keV.  
+#               Ions not equilibrated with electrons.   
 
-# --- --- beam size via edge reference emittance and Twiss parameters:
+# --- --- beam size via edge reference emittance and Twiss parameters alpha,beta,gamma 
+#           in x and y directions:
 
 alpha_x = 0.
 beta_x  = 12.9*cm
@@ -161,20 +175,18 @@ beta_y  = 12.9*cm
 gamma_y = (1. + alpha_y**2)/beta_y
 
 mr = 0.001
-emitn_edge = 0.4*mm*mr 
+emitn_edge = 0.4*mm*mr   # norm rms edge emittance 
 
-v_z_ref   = sqrt(2.*jperev*Q_ref*SourceBias/m_ref)
-gamma_ref = 1./sqrt(1.-(v_z_ref/clight)**2)  
-emit_edge = emitn_edge/(gamma_ref*v_z_ref/clight) 
+v_z_ref   = sqrt(2.*jperev*Q_ref*SourceBias/m_ref)  # nonrel approx ref z-velocity 
+gamma_ref = 1./sqrt(1.-(v_z_ref/clight)**2)         # ref axial gamma factor (approx 1) 
+emit_edge = emitn_edge/(gamma_ref*v_z_ref/clight)   # unnormalized rms edge emittance 
 
-top.lrelativ   = 1                # turn on relativity 
+r_x  = sqrt(emit_edge*beta_x)             # envelope x-edge 
+r_y  = sqrt(emit_edge*beta_y)             # envelope y-edge 
+rp_x = -sqrt(emit_edge/beta_x)*alpha_x    # envelope x-angle 
+rp_y = -sqrt(emit_edge/beta_y)*alpha_y    # envelope y-angle 
 
-r_x  = sqrt(emit_edge*beta_x)
-r_y  = sqrt(emit_edge*beta_y) 
-rp_x = -sqrt(emit_edge/beta_x)*alpha_x 
-rp_y = -sqrt(emit_edge/beta_y)*alpha_y 
-
-# --- thermal velocity and energy (eV) of ref particle from emittance 
+# --- transverse thermal velocity and energy (eV) of nonrel ref particle from emittance 
 vt = v_z_ref*emit_edge/(2.*r_x) 
 Et = 0.5*m_ref*vt**2/jperev 
 
@@ -210,7 +222,7 @@ for i in range(O_ns):
   #Osp.emitny = emitn_edge 
   Osp.vthz   = 0.
 
-# Calculate vbeam and other species quantities 
+# Calculate vbeam and other species quantities for defined species 
 derivqty()
 
 # ---  Calculate and printout Q/M by species and store in a dictionary 
@@ -222,32 +234,33 @@ for ii in sort(sp.keys()):
   sp_qovm.update({ii:qovm})
   print("   Species: "+ii+" Q/A = %s"%qovm)
 
-# ---  Calculate and printout rigidity by species and store in a dictionary 
+# ---  Calculate and printout injected rigidity [B rho] by species and store in a dictionary 
 sp_brho = {}
 print("Species Rigidity:")
 for ii in sort(sp.keys()):
   s = sp[ii]
   gamma = 1./sqrt(1.-(s.vbeam/clight)**2)
-  brho  = gamma*s.mass*s.vbeam/s.charge
+  brho  = gamma*s.mass*s.vbeam/s.charge   # Define rigidity with mean axial velocity 
   sp_brho.update({ii:brho})
   print("   Species: "+ii+" [B rho] = %s T-m"%brho)
 
-# --- Diagnostic plot of [B rho] vs Q/A for species 
-
+# --- Make Diagnostic plot function of [B rho] vs Q/A for species.  This diagnostic is 
+#      written where it should work correctly at any point in the simulation while the beam 
+#      accelerates.  
 
 def plt_diag_bro(label=None):
   if label == None: label = " "
-  brho_min = largepos 
-  brho_max = 0.  
+  brho_min =  largepos 
+  brho_max = -largepos  
   for ii in sp.keys():
     s = sp[ii]
     js = s.js 
     #
-    weight = sum(s.sw*s.w) 
+    weight = sum(s.sw*s.w)   # total weight 
     #
-    vbeam = sum( (s.sw*s.w)*s.getvz() )/weight
-    gammabeam = 1./sqrt(1.-(vbeam/clight)**2)      
-    brho  = s.mass*gammabeam*vbeam/s.charge
+    vbeam = sum( (s.sw*s.w)*s.getvz() )/weight  # avg axial velocity 
+    gammabeam = 1./sqrt(1.-(vbeam/clight)**2)   # gamma from avg axial velocity 
+    brho  = s.mass*gammabeam*vbeam/s.charge     # rigidity 
     #
     brho_min = min(brho,brho_min) 
     brho_max = max(brho,brho_max) 
@@ -306,14 +319,14 @@ for i in range(O_ns):
 #
 # Setup Lattice  
 #
-ekin_per_u = 12.*keV                             # target kinetic energy/u for LEBT 
-StandBias = A_ref*ekin_per_u/Q_ref - SourceBias  # Bias of Injector Column  
+ekin_per_u = 12.*keV                             # target kinetic energy/u for LEBT post ES gap  
 
-Bias = StandBias + SourceBias
+StandBias  = A_ref*ekin_per_u/Q_ref - SourceBias # Conistent Bias of Injector Column
+Bias       = StandBias + SourceBias              # Total bias to achieve ekin_per_u 
 
 
-# --- Venus ECR Source 
-#     Comment: Must have same z-grids for linear and nonlinear forms.  Minimal error checking to enforce this. 
+# --- Venus ECR Source Fields 
+#     Comment: Must have same z-grids for linear and nonlinear forms. 
 
 # --- --- element specification 
 
@@ -352,8 +365,7 @@ else:
 
 
 # --- S4 solenoids 
-#     Comment: linear and nonlinear variants must have same z-grid.  Minimal error checking only for input 
-#              consistency.   
+#     Comment: linear and nonlinear variants must have same z-grid. 
 
 # --- --- element specification 
 
@@ -477,7 +489,7 @@ def getatheta(r):
 # --- Grated Acceleration Gap
 #   Note: for ideal zero-length gap:  top.lacclzl=true for zero length gap.  Accel given given by acclez*(accelze-acclzs) 
 #   see dave grote email on caution on setting top.acclsw for gaps.   
-#   Comment: Linear and nonlinear forms must have same axial grid.  Miminal error checking only for this.  
+#   Comment: Linear and nonlinear forms must have same axial grid.  
 
 # --- --- element specification 
 gag_zc  = 67.811564  # Grated Accel Gap: z-center  
@@ -529,7 +541,7 @@ gag_nl_id = addnewegrddataset(dx=gag_dr,dy=1.,zlength=gag_zlen,ex=gag_er_m,ez =g
 
 # --- --- define grated acceleration gap  
 if gag_typ == "ideal":
-  print("Wanning: No Ideal Acceleration Gap model yet implemented")  
+  print("Warning: No Ideal Acceleration Gap model yet implemented")  
   gag = None 
 elif gag_typ == "lin":
   gag = addnewemlt(zs=gag_zs,ze=gag_ze,id=gag_lin_id,sc=StandBias) 
@@ -581,8 +593,8 @@ else:
 
 
 # --- Neutralization specifications 
-#     Break points z1 and z2 correspond to z values where neutralization is turned off and then back on so the beam is 
-#     unneutralized in the grated acceleration gap.  
+#     Break points z1 and z2 correspond to z values where neutralization is turned off and then 
+#       back on so the beam is unneutralized in the grated acceleration gap.  
 
 neut_z1 = gag_zc - 20.90*cm    # z of neutralization stop post injector before grated gap: set via 1% of gap E_z field reached  
 neut_z2 = gag_zc + 22.28*cm  
@@ -681,7 +693,7 @@ top.npmax = int(nppg*pi*(r_x*r_y)/dx**2*sym_x*sym_y) # max initial particles loa
 #     set before the generate for the beam location. 
 
 z_launch  = ecr_z_extr + 10.*cm 
-top.zbeam = z_launch
+top.zbeam = z_launch                 # present z of simulation, reset consistently 
 
 # rms equivalent beam loaded with the specified distribution form 
 #     KV => KV Distribution 
@@ -741,7 +753,8 @@ w3d.solvergeom = w3d.XYgeom  # fieldsolve type to 2d multigrid
 #winon()
 
 
-# Potential profile diagnostic primarily for initial beam 
+# Potential profile plot diagnostic for potential along x-y axes 
+#   Primarily for initial beam but should work at any point 
 def diag_plt_phi_ax(xmax=None,label=None):
   if xmax == None: xmax = max(w3d.xmesh.max(),w3d.ymesh.max())
   ixmax = sum(where(w3d.xmesh < xmax, 1, 0))
@@ -775,16 +788,17 @@ execfile("diag_lattice.py")
 
 # Install conducting aperture on mesh
 for i in aperture:
-	installconductors(i,dfill=largepos) # will trigger "list has no attribute" error if aperture is used in installconductors
+  installconductors(i,dfill=largepos) # will trigger "list has no attribute" error if aperture is used in installconductors
 
 # Check that inputs are consistent with symmetries (errorcheck package function)
 checksymmetry()
 
-# Carry out an initial unneutralized field solve with conducting pipe after generate 
-
+# ?? Why this here ??
+# --- Weight setup 
 for s in sp.values():       
   s.w   = 1.      # Need full charge: set relative weight to unity 
 
+# Carry out an initial unneutralized field solve with conducting pipe after generate 
 loadrho() 
 fieldsolve() 
 
@@ -796,15 +810,15 @@ fma()
 diag_plt_phi_ax(label="Initial Unneutralized Beam Potential at y,x = 0 b,r",xmax=1.5*r_x)
 fma()
 
-
 # Setup variable weight species needs for neutralization and acceleration 
+
 
 # --- set initial weight factors consistent with neutralization factor 
 #       w0 = initial weight (same for all particles in species) 
 #       species.w = array of variable weight factors 
 for s in sp.values():       
   s.w0  = 1.-neut_f1
-  #s.w   = 1.-neut_f1
+  #s.w   = 1.-neut_f1   #?? why this commented out ?? 
   s.sw0    = s.sw       # save initial sw    (in case later changed)  
   s.vbeam0 = s.vbeam    # save initial vbeam (in case later changed)  
 
@@ -923,11 +937,13 @@ zmmnt()
 savehist(0.) 
 
 
-# ---- local diagnostic history arrays 
+# ---- local diagnostic history arrays: some by species, some all species 
 hl_lenhist_max = 10000
+hl_zbeam    = fzeros([hl_lenhist_max])         # z of beam at hl_ diagnostic accumulations (should be redundant)
 hl_ekin     = fzeros([hl_lenhist_max,top.ns])  # axial beam kinetic energy 
-hl_spnum    = fzeros([hl_lenhist_max,top.ns])  # number simulation particles
-hl_spnumt   = fzeros([hl_lenhist_max])         # number simulation particles (all species) 
+hl_brho     = fzeros([hl_lenhist_max,top.ns])  # rigidity 
+hl_spnum    = fzeros([hl_lenhist_max,top.ns])  # number active simulation particles
+hl_spnumt   = fzeros([hl_lenhist_max])         # number active simulation particles (all species) 
 hl_ibeam_p  = fzeros([hl_lenhist_max,top.ns])  # beam current (particle)   
 hl_ibeam_e  = fzeros([hl_lenhist_max,top.ns])  # beam current (electrical) 
 hl_ibeam_pt = fzeros([hl_lenhist_max])         # total beam current (particle)   
@@ -938,7 +954,7 @@ hl_pth_bar  = fzeros([hl_lenhist_max,top.ns])  # canonical angular momentum (til
 hl_pthn_bar = fzeros([hl_lenhist_max,top.ns])  # normalized canonical angular momentum (P_theta/(m*c))  
 hl_lz_bar   = fzeros([hl_lenhist_max,top.ns])  # mechanical angular momentum
 hl_krot     = fzeros([hl_lenhist_max,top.ns])  # rotation wavenumber  
-hl_lang     = fzeros([hl_lenhist_max,top.ns])  # Larmor rotation angle  
+hl_lang     = fzeros([hl_lenhist_max,top.ns])  # Larmor rotation angle (from initial zero value)   
 hl_epspv    = fzeros([hl_lenhist_max,top.ns])  # rms total phase volume emittance 
 hl_epspvn   = fzeros([hl_lenhist_max,top.ns])  # rms normalized total phase volume emittance ** warning save scaled mm-mrad **
 #
@@ -947,56 +963,59 @@ hl_Qt       = fzeros([hl_lenhist_max])         # Perveance (all species)
 hl_emitt    = fzeros([hl_lenhist_max])         # emittance (all species) 
 hl_sovs0    = fzeros([hl_lenhist_max])         # effective SC depression  
 
-hl_dz = top.nhist*wxy.ds
+hl_dz = top.nhist*wxy.ds  # Axial step size between diagnostic accumulations 
 
 @callfromafterstep
 def diag_hist_hl():
   # check step in history accumulation cycle 
   if top.it%top.nhist != 0: return
+  hl_zbeam[top.jhist] = top.zbeam  # z location of diagnostic accumulations 
   # accumulate history diagnostics by species 
   for ii in sp.keys():
     s = sp[ii]
     js = s.js 
-    #
+    # --- species weight 
     weight = sum(s.sw*s.w) 
-    #
+    # <v_z>_j and gamma and [B rho] calculated from result 
     vbeam = sum( (s.sw*s.w)*s.getvz() )/weight
     gammabeam = 1./sqrt(1.-(vbeam/clight)**2)      
     brho  = s.mass*gammabeam*vbeam/s.charge
+    # --- [B rho]_j 
+    hl_brho[top.jhist,js] = brho  
     #
     #rsq = (s.getx())**2 + (s.gety())**2 # species radii squared for ptheta calculation
     #r   = sqrt(rsq)
     r   = s.getr() 
     rsq = r*r  
-    #
+    # --- <r*r>_j 
     #avg_xsq = sum( (s.sw*s.w)*(s.xp)**2 )/weight
     #avg_ysq = sum( (s.sw*s.w)*(s.yp)**2 )/weight
     avg_rsq = sum( (s.sw*s.w)*rsq )/weight
     #
     #avg_xyp = sum( (s.sw*s.w)*s.getx()*s.getyp() )/weight
     #avg_yxp = sum( (s.sw*s.w)*s.gety()*s.getxp() )/weight
-    #
-    avg_xpy = s.mass*sum( (s.sw*s.w)*s.getx()*s.getuy() )/weight
-    avg_ypx = s.mass*sum( (s.sw*s.w)*s.gety()*s.getux() )/weight
-    #
+    # --- <x*p_y>_j and <y*p_x>_j
+    avg_xpy = s.mass*sum( (s.sw*s.w)*s.getx()*s.getuy() )/weight   # Relativistic 
+    avg_ypx = s.mass*sum( (s.sw*s.w)*s.gety()*s.getux() )/weight   # Relativistic 
+    # --- B_z(r=0,z) at z location of beam 
     bz0  = getappliedfields(x=0.,y=0.,z=top.zbeam)[5]
     # 
-    # --- Axial kinetic energy 
-    hl_ekin[top.jhist,js] = s.mass*clight**2*(gammabeam - 1.)/jperev     
+    # --- Axial kinetic energy [eV], NR calcuation  
+    hl_ekin[top.jhist,js] = (0.5*s.mass*sum( (s.sw*s.w)*s.getvz()**2 )/weight)/jperev         
+                            # s.mass*clight**2*(gammabeam - 1.)/jperev     
     # --- Simulation Particle Number 
     hl_spnum[top.jhist,js] = s.getn()  
     # --- Current, particle (approx here) 
     hl_ibeam_p[top.jhist,js] = s.charge*s.sw*(s.vbeam0/vbeam)*sum( s.getvz() )  # Fix! use weights correctly  ?? 
     # --- Current, electrical  
-    hl_ibeam_e[top.jhist,js] = s.charge*sum( (s.sw*s.w)*s.getvz() )             # Fix! use weights correctly  ??
+    hl_ibeam_e[top.jhist,js] = s.charge*sum( (s.sw*s.w)*s.getvz() )     # slice code weight is particles/meter 
     # --- line charge 
     hl_lambda_p[top.jhist,js] = hl_ibeam_p[top.jhist,js]/vbeam 
     hl_lambda_e[top.jhist,js] = hl_ibeam_e[top.jhist,js]/vbeam 
     # --- Mechanical angular momentum: <x*y'> - <y*x'>  
     #hl_lz_bar[top.jhist,js] = avg_xyp - avg_yxp
-    hl_lz_bar[top.jhist,js] = (avg_xpy - avg_ypx)/(s.mass*gammabeam*vbeam)  
+    hl_lz_bar[top.jhist,js] = sum( (s.sw*s.w)*(s.getx()*s.getyp()-s.gety()*s.getxp()) )/weight  
     # --- Normalized canonical angular momentum 
-    #hl_pthn_bar[top.jhist,js] = gammabeam*(vbeam/clight)*hl_pth_bar[top.jhist,js]
     #hl_pthn_bar[top.jhist,js] = ( avg_xpy - avg_ypx + (s.charge*bz0/2.)*avg_rsq )/(s.mass*clight)  
     hl_pthn_bar[top.jhist,js] = ( avg_xpy - avg_ypx + sum( (s.sw*s.w)*s.charge*r*getatheta(r) )/weight )/(s.mass*clight)
     # --- Canonical angular momentum (scaled by gamma_b*beta_b*m*c) 
@@ -1010,7 +1029,7 @@ def diag_hist_hl():
     hl_krot[top.jhist,js] = hl_lz_bar[top.jhist,js]/avg_rsq
     # --- Larmor Rotation angle: integrate from previous step  
     if top.jhist == 0:
-      hl_lang[0,js] = 0.  
+      hl_lang[0,js] = 0.  # initial condition of zero angle 
     else:
       hl_lang[top.jhist,js] = hl_lang[top.jhist-1,js] + 0.5*hl_dz*(hl_krot[top.jhist-1,js]+hl_krot[top.jhist,js])  
   # --- total number of simulation particles 
@@ -2205,15 +2224,10 @@ if output_data:
 # Print out timing statistics of run 
 printtimers() 
 
-# Make sure that last plot is flushed from buffer
-fma() 
 
 
-
-
-
-
-## Module of the Multi-Species Envelope Model
+# Multi-Species Envelope Model 
+#   Create overlay using axisymmetric, multi-species envelope model
 
 
 CorrectionMode = 1 #set velocity correction method: 0 - no correction, 1 - dBdz only, 2 - dBdz + d2Edz2
@@ -2221,12 +2235,14 @@ CorrectionMode = 1 #set velocity correction method: 0 - no correction, 1 - dBdz 
 integratewarp = 0 # integrate ode using real-time warp data; 0: no, 1: yes
 
 
-
 execfile("env_ode_module.py")
-
-
 
 #plotodeterms(0)
 #plotwarpterms(0)
 #termsodevswarp(0)
 #termsdifference(0)
+
+# Make sure that last plot is flushed from buffer
+fma() 
+
+
