@@ -937,11 +937,15 @@ zmmnt()
 savehist(0.) 
 
 
-# ---- local diagnostic history arrays: some by species, some all species 
-hl_lenhist_max = 10000
+# ---- local diagnostic history arrays: 
+#       * Some by species, some all species 
+#       * Flag variables with prefix hl_ for "history local" 
+
+hl_lenhist_max = 10000 # max accumulation points
 #
 hl_zbeam    = fzeros(hl_lenhist_max)           # z of beam at hl_ diagnostic accumulations (redundant with top.hzbeam)
 #
+hl_vbeam    = fzeros([hl_lenhist_max,top.ns])  # axial beam velocity [m/s]
 hl_ekin     = fzeros([hl_lenhist_max,top.ns])  # axial beam NR kinetic energy [eV]
 hl_brho     = fzeros([hl_lenhist_max,top.ns])  # rigidity [B rho]_js [Tesla-m] 
 #
@@ -988,8 +992,11 @@ hl_epsrn    = fzeros([hl_lenhist_max,top.ns])  # rms normalized radial emittance
 hl_epspv    = fzeros([hl_lenhist_max,top.ns])  # rms total phase volume emittance             (envelope model sense)
 hl_epspvn   = fzeros([hl_lenhist_max,top.ns])  # rms normalized total phase volume emittance  (envelope model sense)
 #
-hl_Qperv    = fzeros([hl_lenhist_max,top.ns])  # Generalized perveance for speices: note matrix perv calculable from 
-                                               #   this and line-charge density  
+hl_temp     = fzeros([hl_lenhist_max,top.ns])  # Effective transverse ion temperature measure [eV]
+#
+hl_Qperv    = fzeros([hl_lenhist_max,top.ns])  # Generalized perveance Q_js for species: note matrix perv 
+                                               #   Q_js,s calculable from this and line-charge densities  [1]   
+hl_neutf    = fzeros([hl_lenhist_max,top.ns])  # Neutralization factor [1] 
 
 hl_dz = top.nhist*wxy.ds  # Axial step size between diagnostic accumulations 
 
@@ -1004,32 +1011,33 @@ def diag_hist_hl():
   yrmst_work = 0. 
   rrmst_work = 0. 
   for ii in sp.keys():
+    # --- species info and index js 
     s = sp[ii]
     js = s.js 
-    # --- species weight 
+    # --- species weight: (real particle per macroparticle)/meter 
     weight = sum(s.sw*s.w) 
-    # <v_z>_j and gamma and [B rho] calculated from result 
-    vbeam = sum( (s.sw*s.w)*s.getvz() )/weight
+    # --- <v_z>_js, gamma_js and [B rho]_js calculated from result 
+    vbeam     = sum( (s.sw*s.w)*s.getvz() )/weight
     gammabeam = 1./sqrt(1.-(vbeam/clight)**2)      
-    brho  = s.mass*gammabeam*vbeam/s.charge
-    # --- [B rho]_js 
-    hl_brho[top.jhist,js] = brho  
+    brho      = s.mass*gammabeam*vbeam/s.charge
+    hl_vbeam[top.jhist,js] = vbeam 
+    hl_brho[top.jhist,js]  = brho  
     #
     # --- species quantities for later use 
-    # --- <r*r>_js
+    # --- avg_rsq = <r*r>_js
     r   = s.getr() 
     rsq = r*r  
     rsq_wsum = sum( (s.sw*s.w)*rsq )
     avg_rsq = rsq_wsum/weight
-    # --- <x*y'>_js and <y*x'>_js 
+    # --- avg_xyp = <x*y'>_js and avg_yxp = <y*x'>_js 
     avg_xyp = sum( (s.sw*s.w)*s.getx()*s.getyp() )/weight
     avg_yxp = sum( (s.sw*s.w)*s.gety()*s.getxp() )/weight
-    # --- <x*p_y>_js and <y*p_x>_js 
-    avg_xpy = s.mass*sum( (s.sw*s.w)*s.getx()*s.getuy() )/weight   # Relativistic 
-    avg_ypx = s.mass*sum( (s.sw*s.w)*s.gety()*s.getux() )/weight   # Relativistic 
-    # --- B_z(r=0,z) at z location of beam 
+    # --- avg_xpy = <x*p_y>_js and avg_ypx = <y*p_x>_js
+    #       * Relativistically correct here  
+    avg_xpy = s.mass*sum( (s.sw*s.w)*s.getx()*s.getuy() )/weight   
+    avg_ypx = s.mass*sum( (s.sw*s.w)*s.gety()*s.getux() )/weight   
+    # --- applied field B_z(r=0,z) at z location of beam 
     bz0  = getappliedfields(x=0.,y=0.,z=top.zbeam)[5]
-    # 
     # --- Axial kinetic energy [eV], ekin_js, NR calcuation  
     hl_ekin[top.jhist,js] = (0.5*s.mass*sum( (s.sw*s.w)*s.getvz()**2 )/weight)/jperev         
                             # s.mass*clight**2*(gammabeam - 1.)/jperev 
@@ -1046,25 +1054,27 @@ def diag_hist_hl():
     # --- Current, electrical, Ie_js  [A]
     hl_ibeam_e[top.jhist,js] = s.charge*sum( (s.sw*s.w)*s.getvz() )     # slice code weight is particles/meter 
     # --- Current, particle, Ip_js [A]
-    hl_ibeam_p[top.jhist,js] = hl_ibeam_e[top.jhist,js]/(s.charge/echarge) 
+    #       * Use way to calculate to remove neutralization factor 
+    #       * Formula as given approx (paraxial) using appropriate weights 
+    hl_ibeam_p[top.jhist,js] = s.charge*s.sw*(s.vbeam0/vbeam)*sum( s.getvz() ) 
     # --- line charge Lambda_js 
     hl_lambda_p[top.jhist,js] = hl_ibeam_p[top.jhist,js]/vbeam 
     hl_lambda_e[top.jhist,js] = hl_ibeam_e[top.jhist,js]/vbeam 
     # --- Mechanical angular momentum: <x*y'>_js - <y*x'>_js  
     hl_lz[top.jhist,js] = avg_xyp - avg_yxp
     # --- Canonical angular momentum <P_theta>_js 
-    #       Notes: * Uses A_theta via getatheata() consistently with linear/nonlinear elements. 
-    #                Original version was only consistent with linear applied fields with A_theta = bz0*r/2.  
+    #       Notes: * Uses A_theta via getatheata() consistently with linear/nonlinear elements.   
     hl_ptheta[top.jhist,js] = avg_xpy - avg_ypx + sum( (s.sw*s.w)*s.charge*r*getatheta(r) )/weight
     # --- Normalized canonical angular momentum in emittance units. <P_theta>_js/(m_js*c) 
-    #       Notes: * What is calculated corresponds to <P_theta>_j/(m_j*c) in envelope model notes so it scales 
-    #                as a normalized emittance and should not vary with acceleration with linear forces.    
-    #              * This employs the nonlinear definition of P_theta if the lattice is nonlinear !    
+    #       * <P_theta>_j/(m_j*c) in envelope model scales as a normalized emittance 
+    #         and should not vary with acceleration with linear forces.    
+    #       * This employs the nonlinear definition of P_theta if the lattice is nonlinear !    
     hl_pthn[top.jhist,js] = hl_ptheta[top.jhist,js]/(s.mass*clight)
     # --- Canonical angular momentum of species in emittance units 
     hl_pth[top.jhist,js] = hl_pthn[top.jhist,js]/(gammabeam*(vbeam/clight))
-    # --- Canonical angular momentum in linear applied field approx (all 3 versions) 
-    #       Notes: * These are redundant in linear field lattice 
+    # --- Canonical angular momentum in linear applied field approx (all 3 versions above) 
+    #       * These are redundant in linear field lattice 
+    #       * Use _l for "linear" flag 
     hl_ptheta_l[top.jhist,js] = avg_xpy - avg_ypx + sum( (s.sw*s.w)*(s.charge*bz0/2.)*avg_rsq )/weight
     hl_pthn_l[top.jhist,js]   = hl_ptheta_l[top.jhist,js]/(s.mass*clight)
     hl_pth_l[top.jhist,js]    = hl_pthn_l[top.jhist,js]/(gammabeam*(vbeam/clight))
@@ -1074,18 +1084,28 @@ def diag_hist_hl():
     # --- normalized rms x- and y-emittances: paraxial equivalent version 
     hl_epsxn[top.jhist,js] = (gammabeam*(vbeam/clight))*hl_epsx[top.jhist,js]
     hl_epsyn[top.jhist,js] = (gammabeam*(vbeam/clight))*hl_epsy[top.jhist,js]
-    # --- rms radial emittance eps_r_js 
+    # --- rms radial thermal emittance eps_r_js as derived in envelope model: 
+    #       * Warp accumulation used to extract has a factor of 2 diference from rms envelope model 
+    #         due to use of an "edge" measure.  Note: this is different than the factor of 4 in epsx etc.  
     hl_epsr[top.jhist,js] = top.hepsr[0,top.jhist,js]/2.  
-    # --- rms normalized radial emittance epsn_r_js
-    hl_epsrn[top.jhist,js] = hl_epsr[top.jhist,js]/(gammabeam*vbeam/clight)
-    # --- rms total phase volume emittance
+    # --- rms normalized radial thermal emittance epsn_r_js as derived in envelope model 
+    hl_epsrn[top.jhist,js] = (gammabeam*(vbeam/clight))*hl_epsr[top.jhist,js]
+    # --- rms total phase volume emittance including radial thermal and canonical angular momentum 
+    #       contributions based on envelope model intrpretation of total phase-space area. 
     hl_epspv[top.jhist,js] = sqrt( (hl_epsr[top.jhist,js])**2 + (hl_pth[top.jhist,js])**2 ) 
     # --- rms normalized total phase volume emittance
     hl_epspvn[top.jhist,js] = sqrt( (hl_epsrn[top.jhist,js])**2 + (hl_pthn[top.jhist,js])**2 )  
+    # --- ion temperature calculated from emittance [eV]
+    hl_temp[top.jhist,js] = hl_ekin[top.jhist,js]*hl_epsr[top.jhist,js]**2/dvnz(hl_rrms[top.jhist,js]**2) 
     # --- Perveance, NR formula for species
-    #     Note: * This is Q_js NOT the matrix perveance Q_j,s in the envelope model notes. 
+    #     Note: * Define bare ... not accounting for neutralization fractions.
+    #             Factor (s.charge/echarge) = Q accounts for charge state with particle line-charge to 
+    #             get bare (unneutralized) electrical line charge.  
+    #           * This is Q_js NOT the matrix perveance Q_j,s in the envelope model notes. 
     #           * Envelope model Q_js can be obtained from Q_j and line charges lambda_j: no need to save 
-    hl_Qperv[top.jhist,js] = s.charge*hl_lambda_e[top.jhist,js]/(2.*pi*eps0*s.mass*vbeam**2)
+    hl_Qperv[top.jhist,js] = s.charge*(s.charge/echarge)*hl_lambda_p[top.jhist,js]/(2.*pi*eps0*s.mass*vbeam**2)
+    # --- Ion rho electron neutralization factor [1] = No space-charge, [0] full space-charge 
+    hl_neutf[top.jhist,js] = 0. # ** FIX: add in to record values ** 
     # --- Rotation wavenumber 
     hl_krot[top.jhist,js] = hl_lz[top.jhist,js]/dvnz(avg_rsq)
     # --- Larmor Rotation angle: integrate from previous step  
@@ -1109,7 +1129,7 @@ def diag_hist_hl():
   hl_rrmst[top.jhist] = sqrt( rrmst_work/weightt_work ) 
  
 
-diag_hist_hl()   # make sure initial diagnostic saved before any steps 
+diag_hist_hl()   # make sure initial diagnostics saved before any steps 
 
 
 # --- Plot limits for particle phase space plots. If lframe = true (default
@@ -1453,12 +1473,33 @@ def diag_field(plt_pa=False,plt_pc=False,plt_pc_xy=False):
 diag_hist_z    = array([z_adv]) #array([gag_col_zs,z_adv])
 diag_hist_step = nint((diag_hist_z-z_launch)/wxy.ds)
 
-def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,plt_lam_p=False,plt_lam_e=False,
-              plt_lz=False,plt_pth=False,plt_pthn=False,plt_krot=False,plt_lang=False,
-              plt_cen=False,plt_envrms=False,plt_envmax=False,plt_envrmsp=False, 
-              plt_emit=False,plt_emitn=False,plt_emitg=False,plt_emitng=False,plt_emitr=False,plt_emitnr=False,
-              plt_emitpv=False,emitpvn=False, 
-              plt_temp=False,plt_temp_flow=False):
+def diag_hist(
+ plt_ekin    = False, 
+ plt_spnum   = False, 
+ plt_curr_p  = False,
+ plt_curr_e  = False,
+ plt_lam_p   = False,
+ plt_lam_e   = False,
+ plt_lz      = False, 
+ plt_pth     = False, 
+ plt_pthn    = False,
+ plt_krot    = False,
+ plt_lang    = False,
+ plt_cen     = False, 
+ plt_envrms  = False, 
+ plt_envmax  = False,
+ plt_envrmsp = False, 
+ plt_emit    = False, 
+ plt_emitn   = False, 
+ plt_emitg   = False,
+ plt_emitng  = False,
+ plt_emitr   = False,
+ plt_emitnr  = False,
+ plt_emitpv  = False, 
+ plt_emitpvn = False, 
+ plt_temp    = False,
+ plt_Qperv   = False,
+ plt_neutf   = False):
   print "Making history diagnostic plots"
   #
   # --- kinetic energy 
@@ -1893,21 +1934,21 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
     fma()
   # --- emittance, unnormalized 
   if plt_emit:
-    # --- All Species Combined, x- and y-plane 
-    hpepsx(titles=false,yscale=1./(mm*mr),lhzbeam=true)
-    hpepsy(titles=false,yscale=1./(mm*mr),lhzbeam=true,color="red")
-    ptitles("History: All Species RMS Edge x-, y-Emittance: x[b],y[r]","z [m]","Emittance [mm-mr]", )
+    # --- All Species Combined, x- and y-plane: Factor 4 in scale to account for Warp edge measure 
+    hpepsx(titles=false,yscale=1./(4.*mm*mr),lhzbeam=true)
+    hpepsy(titles=false,yscale=1./(4.*mm*mr),lhzbeam=true,color="red")
+    ptitles("History: All Species RMS x-, y-Emittance: x[b],y[r]","z [m]","Emittance [mm-mr]", )
     fma()
-    # --- Target Species, x-plane 
-    hpepsx(titles=false,yscale=1./(mm*mr),lhzbeam=true)
+    # --- Target Species, x-plane: Factor 4 in scale to account for Warp edge measure  
+    hpepsx(titles=false,yscale=1./(4.*mm*mr),lhzbeam=true)
     lab = ""    
     for ii in sp_target:
       s = sp[ii]
       js = s.js
       co = s.color
       lab+= ii + "("+co+"), "
-      hpepsx(js=js,color=co,titles=false,yscale=1./(mm*mr),lhzbeam=true)    
-    ptitles("History: "+lab+"RMS Edge x-Emittance","z [m]","Emittanace [mm-mr]", )
+      hpepsx(js=js,color=co,titles=false,yscale=1./(4.*mm*mr),lhzbeam=true)    
+    ptitles("History: "+lab+"RMS x-Emittance","z [m]","Emittance [mm-mr]", )
     fma()
     #
     lab = ""    
@@ -1917,18 +1958,18 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
       co = s.color
       lab+= ii + "("+co+"), "
       hpepsx(js=js,color=co,titles=false,yscale=1./(mm*mr),lhzbeam=true)    
-    ptitles("History: "+lab+"RMS Edge x-Emittance","z [m]","Emittanace [mm-mr]", )
+    ptitles("History: "+lab+"RMS x-Emittance","z [m]","Emittance [mm-mr]", )
     fma()
     # --- Target Species, y-plane 
-    hpepsy(titles=false,yscale=1./(mm*mr),lhzbeam=true)
+    hpepsy(titles=false,yscale=1./(4.*mm*mr),lhzbeam=true)
     lab = ""    
     for ii in sp_target:
       s = sp[ii]
       js = s.js
       co = s.color
       lab+= ii + "("+co+"), "
-      hpepsy(js=js,color=co,titles=false,yscale=1./(mm*mr),lhzbeam=true)    
-    ptitles("History: "+lab+"RMS Edge y-Emittance","z [m]","Emittance [mm-mr]", )
+      hpepsy(js=js,color=co,titles=false,yscale=1./(4.*mm*mr),lhzbeam=true)    
+    ptitles("History: "+lab+"RMS y-Emittance","z [m]","Emittance [mm-mr]", )
     fma()
     #
     lab = ""    
@@ -1938,25 +1979,26 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
       co = s.color
       lab+= ii + "("+co+"), "
       hpepsy(js=js,color=co,titles=false,yscale=1./(mm*mr),lhzbeam=true)    
-    ptitles("History: "+lab+"RMS Edge y-Emittance","z [m]","Emittance [mm-mr]", )
+    ptitles("History: "+lab+"RMS y-Emittance","z [m]","Emittance [mm-mr]", )
     fma()
-  # --- emittance, normalized ** warning norm emittance scaled mm-mrad by default **
+  # --- emittance, normalized 
   if plt_emitn:
     # --- All Species Combined, x- and y-plane 
-    hpepsnx(titles=false,yscale=1.,lhzbeam=true)
-    hpepsny(titles=false,yscale=1.,lhzbeam=true,color="red")
-    ptitles("History: All Species Norm RMS Edge x-, y-Emittance: x[b],y[r]","z [m]","Norm Emittance [mm-mr]", )
+    #     ** warning norm emittance scaled mm-mrad by default in Warp **
+    hpepsnx(titles=false,yscale=1./4.,lhzbeam=true)
+    hpepsny(titles=false,yscale=1./4.,lhzbeam=true,color="red")
+    ptitles("History: All Species Norm RMS x-, y-Emittance: x[b],y[r]","z [m]","Norm Emittance [mm-mr]", )
     fma()
     # --- By Target Species, x-plane 
-    hpepsnx(titles=false,yscale=1.,lhzbeam=true)
+    hpepsnx(titles=false,yscale=1./4.,lhzbeam=true)
     lab = ""    
     for ii in sp_target:
       s = sp[ii]
       js = s.js
       co = s.color
       lab+= ii + "("+co+"), "
-      hpepsnx(js=js,color=co,titles=false,yscale=1.,lhzbeam=true)    
-    ptitles("History: "+lab+"Norm RMS Edge x-Emittance","z [m]","Norm Emittanace [mm-mr]", )
+      hpepsnx(js=js,color=co,titles=false,yscale=1./4.,lhzbeam=true)    
+    ptitles("History: "+lab+"Norm RMS x-Emittance","z [m]","Norm Emittance [mm-mr]", )
     fma()
     #
     lab = ""    
@@ -1965,19 +2007,19 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
       js = s.js
       co = s.color
       lab+= ii + "("+co+"), "
-      hpepsnx(js=js,color=co,titles=false,yscale=1.,lhzbeam=true)    
-    ptitles("History: "+lab+"Norm RMS Edge x-Emittance","z [m]","Norm Emittanace [mm-mr]", )
+      hpepsnx(js=js,color=co,titles=false,yscale=1./4.,lhzbeam=true)    
+    ptitles("History: "+lab+"Norm RMS x-Emittance","z [m]","Norm Emittance [mm-mr]", )
     fma()
     # --- By Target Species, y-plane 
-    hpepsny(titles=false,yscale=1.,lhzbeam=true)
+    hpepsny(titles=false,yscale=1./4.,lhzbeam=true)
     lab = ""    
     for ii in sp_target:
       s = sp[ii]
       js = s.js
       co = s.color
       lab+= ii + "("+co+"), "
-      hpepsny(js=js,color=co,titles=false,yscale=1.,lhzbeam=true)    
-    ptitles("History: "+lab+"Norm RMS Edge y-Emittance","z [m]","Norm Emittance [mm-mr]", )
+      hpepsny(js=js,color=co,titles=false,yscale=1./4.,lhzbeam=true)    
+    ptitles("History: "+lab+"Norm RMS y-Emittance","z [m]","Norm Emittance [mm-mr]", )
     fma()
     #
     lab = ""    
@@ -1986,8 +2028,8 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
       js = s.js
       co = s.color
       lab+= ii + "("+co+"), "
-      hpepsny(js=js,color=co,titles=false,yscale=1.,lhzbeam=true)    
-    ptitles("History: "+lab+"Norm RMS Edge y-Emittance","z [m]","Emittance [mm-mr]", )
+      hpepsny(js=js,color=co,titles=false,yscale=1./4.,lhzbeam=true)    
+    ptitles("History: "+lab+"Norm RMS y-Emittance","z [m]","Emittance [mm-mr]", )
     fma()
   # --- emittance, generalized unnormalized 
   if plt_emitg:
@@ -2005,7 +2047,7 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
       co = s.color
       lab+= ii + "("+co+"), "
       hpepsg(js=js,color=co,titles=false,yscale=1./(mm*mr),lhzbeam=true)    
-    ptitles("History: "+lab+"RMS g-Emittance","z [m]","Emittanace [mm-mr]", )
+    ptitles("History: "+lab+"RMS g-Emittance","z [m]","Emittance [mm-mr]", )
     fma()
     #
     lab = ""    
@@ -2015,7 +2057,7 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
       co = s.color
       lab+= ii + "("+co+"), "
       hpepsg(js=js,color=co,titles=false,yscale=1./(mm*mr),lhzbeam=true)    
-    ptitles("History: "+lab+"RMS g-Emittance","z [m]","Emittanace [mm-mr]", )
+    ptitles("History: "+lab+"RMS g-Emittance","z [m]","Emittance [mm-mr]", )
     fma()
     # --- By Target Species, h-plane 
     hpepsh(titles=false,yscale=1./(mm*mr),lhzbeam=true)
@@ -2039,6 +2081,7 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
     ptitles("History: "+lab+"RMS h-Emittance","z [m]","Emittance [mm-mr]", )
     fma()
   # --- emittance, generalized normalized 
+  #     ** scaled mm-mrad by defualt in Warp ** 
   if plt_emitng:
     # --- All Species Combined, g- and h-plane 
     hpepsng(titles=false,yscale=1.,lhzbeam=true)
@@ -2054,7 +2097,7 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
       co = s.color
       lab+= ii + "("+co+"), "
       hpepsng(js=js,color=co,titles=false,yscale=1.,lhzbeam=true)    
-    ptitles("History: "+lab+"RMS Norm g-Emittance","z [m]","Norm Emittanace [mm-mr]", )
+    ptitles("History: "+lab+"RMS Norm g-Emittance","z [m]","Norm Emittance [mm-mr]", )
     fma()
     #
     lab = ""    
@@ -2064,7 +2107,7 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
       co = s.color
       lab+= ii + "("+co+"), "
       hpepsng(js=js,color=co,titles=false,yscale=1.,lhzbeam=true)    
-    ptitles("History: "+lab+"RMS Norm g-Emittance","z [m]","Norm Emittanace [mm-mr]", )
+    ptitles("History: "+lab+"RMS Norm g-Emittance","z [m]","Norm Emittance [mm-mr]", )
     fma()
     # --- By Target Species, h-plane 
     hpepsnh(titles=false,yscale=1.,lhzbeam=true)
@@ -2090,19 +2133,19 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
   # --- emittance, generalized radial unnormalized 
   if plt_emitr:
     # --- All Species Combined
-    hpepsr(titles=false,yscale=1./(mm*mr),lhzbeam=true)
+    hpepsr(titles=false,yscale=1./(2.*mm*mr),lhzbeam=true)
     ptitles("History: All Species RMS r-Emittance","z [m]","Emittance [mm-mr]", )
     fma()
     # --- By Target Species  
-    hpepsr(titles=false,yscale=1./(mm*mr),lhzbeam=true)
+    hpepsr(titles=false,yscale=1./(2.*mm*mr),lhzbeam=true)
     lab = ""    
     for ii in sp_target:
       s = sp[ii]
       js = s.js
       co = s.color
       lab+= ii + "("+co+"), "
-      hpepsr(js=js,color=co,titles=false,yscale=1./(mm*mr),lhzbeam=true)    
-    ptitles("History: "+lab+"RMS r-Emittance","z [m]","Emittanace [mm-mr]", )
+      hpepsr(js=js,color=co,titles=false,yscale=1./(2.*mm*mr),lhzbeam=true)    
+    ptitles("History: "+lab+"RMS r-Emittance","z [m]","Emittance [mm-mr]", )
     fma()
     #
     lab = ""    
@@ -2111,25 +2154,25 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
       js = s.js
       co = s.color
       lab+= ii + "("+co+"), "
-      hpepsr(js=js,color=co,titles=false,yscale=1./(mm*mr),lhzbeam=true)    
-    ptitles("History: "+lab+"RMS r-Emittance","z [m]","Emittanace [mm-mr]", )
+      hpepsr(js=js,color=co,titles=false,yscale=1./(2.*mm*mr),lhzbeam=true)    
+    ptitles("History: "+lab+"RMS r-Emittance","z [m]","Emittance [mm-mr]", )
     fma()
   # --- emittance, generalized radial normalized ** warning norm emittance scaled mm-mrad by default **
   if plt_emitnr:
     # --- All Species Combined
-    hpepsnr(titles=false,yscale=1.,lhzbeam=true)
+    hpepsnr(titles=false,yscale=1./2.,lhzbeam=true)
     ptitles("History: All Species Norm RMS r-Emittance","z [m]","Norm Emittance [mm-mr]", )
     fma()
     # --- By Target Species  
-    hpepsnr(titles=false,yscale=1.,lhzbeam=true)
+    hpepsnr(titles=false,yscale=1./2.,lhzbeam=true)
     lab = ""    
     for ii in sp_target:
       s = sp[ii]
       js = s.js
       co = s.color
       lab+= ii + "("+co+"), "
-      hpepsnr(js=js,color=co,titles=false,yscale=1.,lhzbeam=true)    
-    ptitles("History: "+lab+"RMS Norm r-Emittance","z [m]","Norm Emittanace [mm-mr]", )
+      hpepsnr(js=js,color=co,titles=false,yscale=1./2.,lhzbeam=true)    
+    ptitles("History: "+lab+"RMS Norm r-Emittance","z [m]","Norm Emittance [mm-mr]", )
     fma()
     #
     lab = ""    
@@ -2138,8 +2181,8 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
       js = s.js
       co = s.color
       lab+= ii + "("+co+"), "
-      hpepsnr(js=js,color=co,titles=false,yscale=1.,lhzbeam=true)    
-    ptitles("History: "+lab+"RMS Norm r-Emittance","z [m]","Norm Emittanace [mm-mr]", )
+      hpepsnr(js=js,color=co,titles=false,yscale=1./2.,lhzbeam=true)    
+    ptitles("History: "+lab+"RMS Norm r-Emittance","z [m]","Norm Emittance [mm-mr]", )
     fma()
   # --- emittance, total phase volume, unnormalized 
   if plt_emitpv:
@@ -2161,14 +2204,14 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
       plg(hl_epspv[0:top.jhist+1,js]/(mm*mr),hl_zbeam[0:top.jhist+1],color=co)    
     ptitles("History: "+lab+" Total Phase Volume Emittance","z [m]","Emittance [mm-mrad]", )
     fma()             
-  # --- emittance, total phase volume, normalized  ** warning norm emittance scaled mm-mrad by default **
-  if plt_emitpv:
+  # --- emittance, total phase volume, normalized  
+  if plt_emitpvn:
     # --- All Species Combined  
     for ii in sort(sp.keys()):
       s = sp[ii]        
       js = s.js
       co = s.color
-      plg(hl_epspvn[0:top.jhist+1,js],hl_zbeam[0:top.jhist+1],color=co)    
+      plg(hl_epspvn[0:top.jhist+1,js]/(mm*mr),hl_zbeam[0:top.jhist+1],color=co)    
     ptitles("History: Species Total Phase Volume Norm Emittance", "z [m]","Norm Emittance [mm-mrad]", )
     fma()
     # --- Target Species
@@ -2178,22 +2221,70 @@ def diag_hist(plt_ekin=False,plt_spnum=False,plt_curr_p=False,plt_curr_e=False,p
       js = s.js
       co = s.color
       lab+= ii + "("+co+"), "
-      plg(hl_epspvn[0:top.jhist+1,js],hl_zbeam[0:top.jhist+1],color=co)    
+      plg(hl_epspvn[0:top.jhist+1,js]/(mm*mr),hl_zbeam[0:top.jhist+1],color=co)    
     ptitles("History: "+lab+" Total Phase Volume Norm Emittance","z [m]","Norm Emittance [mm-mrad]", )
     fma()             
-  # --- temperature using <x'2> and corelation of x and x' via <x*x'> 
-  if plt_temp and top.jhist > 0:
-    xrms  = top.hxrms[0,1:top.jhist+1,0]
-    emitx = top.hepsx[0,1:top.jhist+1,0]
-    plg(beam.mass*top.vbeam**2*emitx**2/(jperev*16.*xrms**2),
-        top.hzbeam[1:top.jhist+1] )
-    yrms  = top.hyrms[0,1:top.jhist+1,0]
-    emity = top.hepsy[0,1:top.jhist+1,0]
-    plg(beam.mass*top.vbeam**2*emity**2/(jperev*16.*yrms**2),
-        top.hzbeam[1:top.jhist+1],color="red")
-    ptitles("History: Spatial Avg Temp: x [b], y [r]",
-            "z [m]","Spatial Avg Temp (eV)", )
+  # --- Effective ion temperature calculated from radial thermal emittance  
+  if plt_temp:
+    # --- All Species Combined  
+    for ii in sort(sp.keys()):
+      s = sp[ii]        
+      js = s.js
+      co = s.color
+      plg(hl_temp[0:top.jhist+1,js],hl_zbeam[0:top.jhist+1],color=co)    
+    ptitles("History: Species Transverse Thermal Temperature", "z [m]","Temp [eV]", )
     fma()
+    # --- Target Species
+    lab = "" 
+    for ii in sp_target:
+      s = sp[ii]
+      js = s.js
+      co = s.color
+      lab+= ii + "("+co+"), "
+      plg(hl_temp[0:top.jhist+1,js],hl_zbeam[0:top.jhist+1],color=co)    
+    ptitles("History: "+lab+" Species Transverse Thermal Temperature","z [m]","Temp [eV]", )
+    fma()             
+  # --- Perveance   
+  if plt_Qperv:
+    # --- All Species Combined  
+    for ii in sort(sp.keys()):
+      s = sp[ii]        
+      js = s.js
+      co = s.color
+      plg(hl_Qperv[0:top.jhist+1,js],hl_zbeam[0:top.jhist+1],color=co)    
+    ptitles("History: Species Perveance Q", "z [m]","Perveance [1]", )
+    fma()
+    # --- Target Species
+    lab = "" 
+    for ii in sp_target:
+      s = sp[ii]
+      js = s.js
+      co = s.color
+      lab+= ii + "("+co+"), "
+      plg(hl_Qperv[0:top.jhist+1,js],hl_zbeam[0:top.jhist+1],color=co)    
+    ptitles("History: "+lab+" Species Perveance Q","z [m]","Perveance [1]", )
+    fma()             
+  # --- Neutralization Factor 
+  if plt_neutf:
+    # --- All Species Combined  
+    for ii in sort(sp.keys()):
+      s = sp[ii]        
+      js = s.js
+      co = s.color
+      plg(hl_neutf[0:top.jhist+1,js],hl_zbeam[0:top.jhist+1],color=co)    
+    ptitles("History: Species Electron Neutralization Fractions", "z [m]","Fraction [1]", )
+    fma()
+    # --- Target Species
+    lab = "" 
+    for ii in sp_target:
+      s = sp[ii]
+      js = s.js
+      co = s.color
+      lab+= ii + "("+co+"), "
+      plg(hl_neutf[0:top.jhist+1,js],hl_zbeam[0:top.jhist+1],color=co)    
+    ptitles("History: "+lab+" Electron Neutralization Factors","z [m]","Fraction [1]", )
+    fma()               
+
 
 #  -- Install diagnostics at appropriate intervals after steps
 #       Add options to generate plots desired 
@@ -2212,7 +2303,9 @@ def diag_calls():
               plt_lz=true,plt_pth=true,plt_pthn=true,plt_krot=true,plt_lang=true, 
               plt_cen=true,plt_envrms=true,plt_envmax=true,plt_envrmsp=true,  
               plt_emit=true,plt_emitn=true,plt_emitg=true,plt_emitng=true,plt_emitr=true,plt_emitnr=true, 
-              plt_emitpv=true,emitpvn=true)
+              plt_emitpv=true,plt_emitpvn=true,plt_temp=true,plt_Qperv=true,plt_neutf=true)
+
+
 
 # Install diagnostic calls after simulation step
 installafterstep(diag_calls)
