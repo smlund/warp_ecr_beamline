@@ -2252,7 +2252,7 @@ def diag_hist(
       js = s.js
       co = s.color
       plg(hl_Qperv[0:top.jhist+1,js],hl_zbeam[0:top.jhist+1],color=co)    
-    ptitles("History: Species Perveance Q", "z [m]","Perveance [1]", )
+    ptitles("History: Species Bare Perveance Q", "z [m]","Perveance [1]", )
     fma()
     # --- Target Species
     lab = "" 
@@ -2262,7 +2262,7 @@ def diag_hist(
       co = s.color
       lab+= ii + "("+co+"), "
       plg(hl_Qperv[0:top.jhist+1,js],hl_zbeam[0:top.jhist+1],color=co)    
-    ptitles("History: "+lab+" Species Perveance Q","z [m]","Perveance [1]", )
+    ptitles("History: "+lab+" Species Bare Perveance Q","z [m]","Perveance [1]", )
     fma()             
   # --- Neutralization Factor 
   if plt_neutf:
