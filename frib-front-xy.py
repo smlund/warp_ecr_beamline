@@ -692,7 +692,7 @@ top.npmax = int(nppg*pi*(r_x*r_y)/dx**2*sym_x*sym_y) # max initial particles loa
 #     At present, all species are loaded with the same value of distrbtn.   zbeam can be 
 #     set before the generate for the beam location. 
 
-z_launch  = ecr_z_extr + 10.*cm 
+z_launch  = ecr_z_extr #+ 10.*cm 
 top.zbeam = z_launch                 # present z of simulation, reset consistently 
 
 # rms equivalent beam loaded with the specified distribution form 
@@ -844,68 +844,13 @@ fma()
 diag_plt_phi_ax(label="Initial f = %s Neutralized Beam Potential at y,x = 0 b,r"%(neut_f1),xmax=1.5*r_x)
 fma()
 
-
+# Loading ion at launch point based on different assumptions on their birth in the ECR
 # Modify intital distribution loaded on generate to include canonical angular momentum
-# 
-bz0_extr   = getappliedfields(x=0.,y=0.,z=ecr_z_extr)[5]    # B_z on-axis at ECR extraction plane
-bz0_launch = getappliedfields(x=0.,y=0.,z=z_launch)[5]      # B_z on-axis at simulation launch location 
 
-inj_ang_mom = true
-
-sp_krot_launch = {}
-sp_krot_v      = {} 
-for ii in sp.keys():
-  s = sp[ii]
-  # --- rigidity 
-  gamma = 1./sqrt(1.-(s.vbeam/clight)**2)
-  brho  = gamma*s.mass*s.vbeam/s.charge
-  # --- rms calculation
-  rms_launch = sqrt(average( (s.xp)**2 + (s.yp)**2 ))
-  rms_extr   = sqrt( (s.a0/2.)**2 + (s.b0/2.)**2 )     # *** Replace with beam size at extraction ! ****
-  # --- rot wavenumbers at launch and in vacuum v 
-  krot_launch = (bz0_extr*rms_extr**2/rms_launch**2 - bz0_launch)/(2.*brho)
-  krot_v      = bz0_extr/(2.*brho)
-  # 
-  sp_krot_launch.update({ii:krot_launch})
-  sp_krot_v.update({ii:krot_v}) 
-  #
-  if inj_ang_mom: 
-    s.uxp -= krot_launch*s.yp*s.uzp
-    s.uyp += krot_launch*s.xp*s.uzp
+execfile("frib-front-load.py")
 
 #raise Exception("to here")
 
-# --- make plots of initial rotation by species at launch point and if transported in vacuuo    
-
-def diag_plt_krot_launch(): 
-  for ii in sp.keys():
-    plt(ii,sp_qovm[ii],sp_krot_launch[ii],tosys=1,color=sp[ii].color) 
-
-  [qovm_min,qovm_max] = [minnd(sp_qovm.values()),maxnd(sp_qovm.values())]
-  [krot_launch_min,krot_launch_max] = [minnd(sp_krot_launch.values()),maxnd(sp_krot_launch.values())]
-  qovm_pad = 0.1*(qovm_max - qovm_min)
-  krot_launch_pad = 0.1*(krot_launch_max - krot_launch_min)
-
-  limits(qovm_min-qovm_pad,qovm_max+qovm_pad,krot_launch_min-krot_launch_pad,krot_launch_max+krot_launch_pad) 
-  ptitles("Angular Phase Advance Wavenumber: Beam Launch","Q/A","Wavenumber [Rad/m]",)
-  fma() 
-
-diag_plt_krot_launch() 
-
-def diag_plt_krot_v():
-  for ii in sp.keys():
-    plt(ii,sp_qovm[ii],sp_krot_v[ii],tosys=1,color=sp[ii].color)
-
-  [qovm_min,qovm_max] = [minnd(sp_qovm.values()),maxnd(sp_qovm.values())]
-  [krot_v_min,krot_v_max] = [minnd(sp_krot_v.values()),maxnd(sp_krot_v.values())]
-
-  krot_v_pad = 0.1*(krot_v_max - krot_v_min)
-  qovm_pad = 0.1*(qovm_max - qovm_min)
-  limits(qovm_min-qovm_pad,qovm_max+qovm_pad,krot_v_min-krot_v_pad,krot_v_max+krot_v_pad) 
-  ptitles("Angular Phase Advance Wavenumber: Beam Launch in Bz=0","Q/A","Wavenumber [Rad/m]",)
-  fma()
-
-diag_plt_krot_v() 
 
 
 # Make plot of initial Brho by species 
@@ -2400,7 +2345,7 @@ CorrectionMode = 1 #set velocity correction method: 0 - no correction, 1 - dBdz 
 integratewarp = 0 # integrate ode using real-time warp data; 0: no, 1: yes
 
 
-#execfile("env_ode_module.py")
+execfile("frib-front-env.py")
 
 #plotodeterms(0)
 #plotwarpterms(0)
