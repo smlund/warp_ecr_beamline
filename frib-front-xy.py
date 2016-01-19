@@ -30,6 +30,9 @@ from errorcheck  import checksymmetry   # Check for input errors
 top.pline2   = "xy Slice Simulation: FRIB Front End" 
 top.pline1   = " "   # Add more info, if desired.  
 
+# Parameters 
+mr = 0.001  # milli-rad unit 
+
 # Invoke setup routine for graphics and output files (THIS IS MANDATORY)
 setup()
 
@@ -159,12 +162,42 @@ SourceBias = 35.*keV  # source voltage: set for Q_ref*SourceBias/A =>  4.9264706
 U_ekin = array(U_charge_states)*SourceBias
 O_ekin = array(O_charge_states)*SourceBias 
 
-# --- --- ion temp
-#  Guilliaume:  Ions likely 2-3 eV and electrons few - 100s of keV.  
-#               Ions not equilibrated with electrons.   
+# --- --- initial ion thermal temp/phase-space area 
+# 
+#  Approach: Allow setting of thermal phase-space area by either a temperature specification 
+#            OR a normalized rms emittance measure. Convert input values to a normalized rms 
+#            edge emittance to work with the Warp loader.  
+#
+#  init_emit_spec = "emitn"    => set by init_emitn 
+#                   or "temp"  => set by init_temp 
+# 
+#  init_emitn = Initial ion thermal rms normalized emittance [m-rad] ** NOT edge measure **
+#  init_temp  = Initial ion temp [eV] 
+#
+#  Notes:
+#  * Guilliaume:  Ions likely 2-3 eV and electrons few to 100s of keV.  
+#                 Ions not equilibrated with electrons.
+#  * Previous simulations used 0.4*mm*mr thermal phase-space area launched outside of magnetic fields.      
+#  * Here we set only the thermal component of the emittance and the distribution is loaded without 
+#    correlation terms. Later we adjust correlation terms to set the value of the canonical angular 
+#    momentum as desired based on field values at launch and birth.    
 
-# --- --- beam size via edge reference emittance and Twiss parameters alpha,beta,gamma 
-#           in x and y directions:
+init_emit_spec = "temp" 
+init_temp  = 3.          # initial temp [eV] 
+init_emitn = 0.4*mm*mr   # initial rms normalized emittance [m-rad]  
+
+# --- --- initial beam size: elliptical cross-section beam 
+#   
+#   r_x  = 2*sqrt(<x^2>)           Initial x-plane beam rms edge radius [m] 
+#   rp_x = 2*<x*x'>/sqrt(<x^2>)    Initial rms envelope angle   [rad] 
+# 
+#   r_y, rp_y                      Analogous y-plane measures 
+#
+# Note:
+# * Previous simulations used betatron functions with a specific emittance value to get 
+#   desired beam size. 
+# * Left betatron functions in for reference but now just put in beam size.  
+#
 
 alpha_x = 0.
 beta_x  = 12.9*cm
@@ -174,8 +207,7 @@ alpha_y = 0.
 beta_y  = 12.9*cm
 gamma_y = (1. + alpha_y**2)/beta_y
 
-mr = 0.001
-emitn_edge = 0.4*mm*mr   # norm rms edge emittance 
+emitn_edge = 0.4*mm*mr   # norm rms edge emittance used to set beam size in earlier simulations 
 
 v_z_ref   = sqrt(2.*jperev*Q_ref*SourceBias/m_ref)  # nonrel approx ref z-velocity 
 gamma_ref = 1./sqrt(1.-(v_z_ref/clight)**2)         # ref axial gamma factor (approx 1) 
@@ -186,40 +218,64 @@ r_y  = sqrt(emit_edge*beta_y)             # envelope y-edge
 rp_x = -sqrt(emit_edge/beta_x)*alpha_x    # envelope x-angle 
 rp_y = -sqrt(emit_edge/beta_y)*alpha_y    # envelope y-angle 
 
-# --- transverse thermal velocity and energy (eV) of nonrel ref particle from emittance 
-vt = v_z_ref*emit_edge/(2.*r_x) 
-Et = 0.5*m_ref*vt**2/jperev 
+r_extractor = 4.*mm   # ECR extraction aperture radius [m]
 
-# --- intrinsic thermal emittance scale 
-Et_therm = 3.   # Guilliaume's estimated ion temp scale (eV) 
-vt_therm = sqrt(2.*(jperev*Et_therm)/m_ref)
-emit_therm  = 2.*r_x*vt_therm/v_z_ref
-emitn_therm = (gamma_ref*v_z_ref/clight)*emit_therm
+r_x = r_extractor  
+r_y = r_extractor
+rp_x = 0. 
+rp_y = 0. 
 
 
-# Ratio of thermal to edge emittance suggests value of P_theta contributing to effective emittance 
-# emit_therm/emit_edge = 0.10  => most beam PS area from P_theta  
+## --- transverse thermal velocity and energy (eV) of nonrel ref particle from emittance 
+#
+#vt = v_z_ref*emit_edge/(2.*r_x) 
+#Et = 0.5*m_ref*vt**2/jperev 
+#
+## --- intrinsic thermal emittance scale 
+#Et_therm = 3.   # Guilliaume's estimated ion temp scale (eV) 
+#vt_therm = sqrt(2.*(jperev*Et_therm)/m_ref)
+#emit_therm  = 2.*r_x*vt_therm/v_z_ref
+#emitn_therm = (gamma_ref*v_z_ref/clight)*emit_therm
+#
+## Ratio of thermal to edge emittance suggests value of P_theta contributing to effective emittance 
+## emit_therm/emit_edge = 0.10  => most beam PS area from P_theta  
+
+# --- Set properties of initial species load 
 
 for i in range(U_ns):
   Usp = U_species[i]
-  Usp.ekin   = U_ekin[i]           # kinetic energy of beam particle [eV]
+  ekin_i  = U_ekin[i]
+  betab_i = sqrt(2.*jperev*ekin_i/Usp.sm)/clight
+  if init_emit_spec == "emitn":
+    emitn_therm_edge = 4.*init_emitn 
+  elif init_emit_spec == "temp": 
+    emitn_therm_edge = betab_i*((2.*r_x)/sqrt(2.))*sqrt(init_temp/ekin_i)
+  else:
+    raise Exception("Error: init_emit_spec not set properly") 
+  #
+  Usp.ekin   = ekin_i              # kinetic energy of beam particle [eV]
   Usp.vbeam  = 0.                  # beam axial velocity [m/sec] (set from ekin if 0) 
   Usp.ibeam  = U_ibeam[i]          # beam current [amps] 
-  Usp.emitnx = emitn_therm         # beam x-emittance, rms edge [m-rad] 
-  Usp.emitny = emitn_therm         # beam y-emittance, rms edge [m-rad]
-  #Usp.emitnx = emitn_edge          
-  #Usp.emitny = emitn_edge          
+  Usp.emitnx = emitn_therm_edge    # beam x-emittance, rms edge [m-rad] 
+  Usp.emitny = emitn_therm_edge    # beam y-emittance, rms edge [m-rad]
   Usp.vthz   = 0.                  # axial velocity spread [m/sec] 
 
 for i in range(O_ns):
   Osp = O_species[i]
-  Osp.ekin   = O_ekin[i] 
+  ekin_i  = O_ekin[i]
+  betab_i = sqrt(2.*jperev*ekin_i/Osp.sm)/clight
+  if init_emit_spec == "emitn":
+    emitn_therm_edge = 4.*init_emitn 
+  elif init_emit_spec == "temp": 
+    emitn_therm_edge = betab_i*((2.*r_x)/sqrt(2.))*sqrt(init_temp/ekin_i)
+  else:
+    raise Exception("Error: init_emit_spec not set properly") 
+  # 
+  Osp.ekin   = ekin_i  
   Osp.vbeam  = 0.
   Osp.ibeam  = O_ibeam[i]
-  Osp.emitnx = emitn_therm
-  Osp.emitny = emitn_therm
-  #Osp.emitnx = emitn_edge 
-  #Osp.emitny = emitn_edge 
+  Osp.emitnx = emitn_therm_edge 
+  Osp.emitny = emitn_therm_edge
   Osp.vthz   = 0.
 
 # Calculate vbeam and other species quantities for defined species 
