@@ -36,3 +36,11 @@ me if you want to contribute and I will add you)
   % git commit -m "SML: updated readme.txt file" 
   % git push 
 
+To remove a file from git control (to not include in future pulls), use 
+
+  % git rm file 
+
+The local copy of the file removed can be retained on disk by using 
+
+  # git rm --cached file 
+
