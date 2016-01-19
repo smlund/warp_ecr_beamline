@@ -840,7 +840,7 @@ def diag_plt_phi_ax(xmax=None,label=None):
 package("wxy"); generate()
 
 # Read in diagnostics for applied lattice fields 
-execfile("diag_lattice.py") 
+execfile("frib-front-diag-lat.py") 
 
 # Install conducting aperture on mesh
 for i in aperture:
