@@ -211,29 +211,33 @@ init_emitn = 0.4*mm*mr   # initial rms normalized emittance [m-rad]
 #   r_y, rp_y                      Analogous y-plane measures 
 #
 # Note:
+# * Now set r_x etc by fraction of ECR aperture size.  
 # * Previous simulations used betatron functions with a specific emittance value to get 
 #   desired beam size. 
-# * Left betatron functions in for reference but now just put in beam size.  
+# * Was set by betatron functions and an emittance specification.  Commented out code (left 
+#   in for reference).   
 #
 
-alpha_x = 0.
-beta_x  = 12.9*cm
-gamma_x = (1. + alpha_x**2)/beta_x 
-
-alpha_y = 0.
-beta_y  = 12.9*cm
-gamma_y = (1. + alpha_y**2)/beta_y
-
-emitn_edge = 0.4*mm*mr   # norm rms edge emittance used to set beam size in earlier simulations 
-
-v_z_ref   = sqrt(2.*jperev*Q_ref*SourceBias/m_ref)  # nonrel approx ref z-velocity 
-gamma_ref = 1./sqrt(1.-(v_z_ref/clight)**2)         # ref axial gamma factor (approx 1) 
-emit_edge = emitn_edge/(gamma_ref*v_z_ref/clight)   # unnormalized rms edge emittance 
-
-r_x  = sqrt(emit_edge*beta_x)             # envelope x-edge 
-r_y  = sqrt(emit_edge*beta_y)             # envelope y-edge 
-rp_x = -sqrt(emit_edge/beta_x)*alpha_x    # envelope x-angle 
-rp_y = -sqrt(emit_edge/beta_y)*alpha_y    # envelope y-angle 
+# ####################### OLD ... set by betatron funcs ###############
+#alpha_x = 0.
+#beta_x  = 12.9*cm
+#gamma_x = (1. + alpha_x**2)/beta_x 
+#
+#alpha_y = 0.
+#beta_y  = 12.9*cm
+#gamma_y = (1. + alpha_y**2)/beta_y
+#
+#emitn_edge = 0.4*mm*mr   # norm rms edge emittance used to set beam size in earlier simulations 
+#
+#v_z_ref   = sqrt(2.*jperev*Q_ref*SourceBias/m_ref)  # nonrel approx ref z-velocity 
+#gamma_ref = 1./sqrt(1.-(v_z_ref/clight)**2)         # ref axial gamma factor (approx 1) 
+#emit_edge = emitn_edge/(gamma_ref*v_z_ref/clight)   # unnormalized rms edge emittance 
+#
+#r_x  = sqrt(emit_edge*beta_x)             # envelope x-edge 
+#r_y  = sqrt(emit_edge*beta_y)             # envelope y-edge 
+#rp_x = -sqrt(emit_edge/beta_x)*alpha_x    # envelope x-angle 
+#rp_y = -sqrt(emit_edge/beta_y)*alpha_y    # envelope y-angle 
+# #######################
 
 r_extractor = 4.*mm   # ECR extraction aperture radius [m]
 
