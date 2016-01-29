@@ -547,6 +547,11 @@ savehist(0.)
 # Read in diagnostics for slice run 
 execfile("frib-front-xy-diag.py") 
 
+# Loading ion at launch point based on different assumptions on their birth in the ECR
+# Modify intital distribution loaded on generate to include canonical angular momentum
+
+execfile("frib-front-xy-load.py")
+
 diag_hist_hl()   # make sure initial diagnostics saved before any steps 
 
 # Make plot of initial unneutralized beam potential profile 
@@ -569,11 +574,6 @@ fma()
 
 diag_plt_phi_ax(label="Initial f = %s Neutralized Beam Potential at y,x = 0 b,r"%(neut_f1),xmax=1.5*r_x)
 fma()
-
-# Loading ion at launch point based on different assumptions on their birth in the ECR
-# Modify intital distribution loaded on generate to include canonical angular momentum
-
-execfile("frib-front-xy-load.py")
 
 #raise Exception("to here")
 
@@ -671,18 +671,7 @@ printtimers()
 # Multi-Species Envelope Model 
 #   Create overlay using axisymmetric, multi-species envelope model
 
-
-CorrectionMode = 1 #set velocity correction method: 0 - no correction, 1 - dBdz only, 2 - dBdz + d2Edz2
-
-integratewarp = 0 # integrate ode using real-time warp data; 0: no, 1: yes
-
-
 execfile("frib-front-env.py")
-
-#plotodeterms(0)
-#plotwarpterms(0)
-#termsodevswarp(0)
-#termsdifference(0)
 
 # Make sure that last plot is flushed from buffer
 fma() 
