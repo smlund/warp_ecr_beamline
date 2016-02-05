@@ -240,6 +240,7 @@ init_emitn = 0.4*mm*mr   # initial rms normalized emittance [m-rad]
 # #######################
 
 r_extractor = 4.*mm   # ECR extraction aperture radius [m]
+                      #   Value both for Venus and Artemis A,B ECR Sources 
 
 r_x = r_extractor  
 r_y = r_extractor
