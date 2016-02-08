@@ -39,9 +39,9 @@ apart into functional sections to aid maintainability.
 """
 
 # Load Warp and various script packages 
-from warp        import *               # Warp code 
-from errorcheck  import checksymmetry   # Check for input errors
-#from runcounters import *               # Counter for parametric runs 
+from warp import *                                # Warp code 
+from warp.utils.errorcheck  import checksymmetry  # Check for input errors
+#from warp.utils.runcounters import *             # Counter for parametric runs 
 
 # Set informational labels included on all output cgm plots.   
 top.pline2   = "xy Slice Simulation: FRIB Front End" 
@@ -541,7 +541,7 @@ def adjustweights():
 
 # Fix intitial history diagnostics to account for species weight changes
 top.jhist = top.jhist-1   # needed to be minus 1 to reset save in right postion 
-from getzmom import *
+from warp.diagnostics.getzmom import *
 zmmnt() 
 savehist(0.) 
 
