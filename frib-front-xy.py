@@ -114,7 +114,7 @@ for ii in sort(sp.keys()):
 
 # ---  Calculate and printout injected rigidity [B rho] by species and store in a dictionary 
 sp_brho = {}
-print("Species Rigidity:")
+print("Species Injected Rigidity:")
 for ii in sort(sp.keys()):
   s = sp[ii]
   gamma = 1./sqrt(1.-(s.vbeam/clight)**2)
@@ -132,18 +132,6 @@ execfile("frib-front-lat.py")
 
 # Define transverse simulation grid
 
-# --- Symmetries.  Set for increased statistical efficiency.  These should
-#     only be used in cases where lattice symmetries and initial beam
-#     conditions and loads allow.  For no symmetry, set both options to false.
-w3d.l2symtry = false     # 2-fold symmetry
-w3d.l4symtry = false     # 4-fold symmetry
-
-# -- Grid increments
-#      First choose number grid cells without symmetry and reset 
-#      consistent with symmetry options
-
-n_grid = 400 # 200 previous # number grid cells (no symmetries) 
-
 sym_x = 1.
 sym_y = 1.
 if w3d.l4symtry:
@@ -158,7 +146,7 @@ w3d.ny = int(sym_y*n_grid)
 # ---- Grid bounds 
 #      Some bounds will be reset to zero by code on generation
 #      if symmetry options are set.
-l_grid = 2.*r_p               # length edge of simulation grid [m]      
+l_grid = 2.*r_grid            # length edge of simulation grid [m]      
 w3d.xmmax =  l_grid/2.        # x-grid max limit [m] 
 w3d.xmmin = -l_grid/2.        # x-grid min limit [m] 
 w3d.ymmax =  l_grid/2.        # y-grid max limit [m] 
@@ -178,37 +166,10 @@ dx = l_grid/float(n_grid)
 #   top.nplive = total number live particles = len(sp)*top.npmax at time of load 
 # 
 
-nppg = 100.    # number of particles per grid cell
 top.npmax = int(nppg*pi*(r_x*r_y)/dx**2*sym_x*sym_y) # max initial particles loaded (each species) 
 
-# Distribution loads type 
-#  Comment: 
-#     See stptcl routine for how loading works.   
-#     At present, all species are loaded with the same value of distrbtn.   zbeam can be 
-#     set before the generate for the beam location. 
 
-z_launch  = ecr_z_extr #+ 10.*cm 
-top.zbeam = z_launch                 # present z of simulation, reset consistently 
-
-# rms equivalent beam loaded with the specified distribution form 
-#     KV => KV Distribution 
-#
-#     SG => semi-Gaussian distribution 
-#             (KV density and local Gaussian angle spread about KV flutter) 
-#
-#     TE => Pseudoequilibrium with Thermal  Equilibrium form 
-#     WB => Pseudoequilibrium with Waterbag Equilibrium form
-#             The Pseudoequilibrium distributions use continuous focused 
-#             equilibrium forms which are canoically transformed to AG 
-#             symmetry of the lattice. 
-#
-#     For more info on loads, see review paper:
-#       Lund, Kikuchi, and Davidson, PRSTAB 12, 114801 (2009) 
-
-#w3d.distrbtn = "KV"          # initial KV distribution
-#w3d.distrbtn = "TE"          # initial thermal distribution
-w3d.distrbtn = "WB"          # initial waterbag distribution
-#w3d.distrbtn = "SG"          # initial semi-Gaussian distribution 
+top.zbeam = z_launch    # present z of simulation, to launch, reset consistently 
 
 # --- random number options to use in loading 
 w3d.xrandom  = "pseudo" # "digitrev"    # load x,y,z  with digitreverse random numbers 
@@ -219,13 +180,11 @@ w3d.cylinder = true          # load a cylinder
 # Particle moving
 #
 
-z_adv = 69.2   # Axial position in lattice to advance to 
-
 top.lrelativ   =  false    # turn off relativistic kinematics
 top.relativity = 0         # turn off relativistic self-field correction
                            #   to account for approx diamagnetic B-field of beam
 
-wxy.ds = 2.*mm             # ds for part adv [m] 
+wxy.ds = ds                # ds for part adv [m] 
 wxy.lvzchang = true        # Use iterative stepping, which is needed if
                            # the vz of the particles changes.
                            #  ... must change even in linear lattice 

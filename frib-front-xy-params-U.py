@@ -1,7 +1,7 @@
 # Parameters for FRIB front-end simulations using the x-y slice model 
 # described in frib-front-xy.py 
 # Notes:
-#  * Attempt to include inputs describing beam here.  
+#  * include inputs describing beam AND numerical (mesh, advance) parameters  
 
  
 #########################
@@ -253,5 +253,63 @@ for i in range(Support_ns):
   Ssp.ap0  = rp_x  
   Ssp.bp0  = rp_y  
 
+#
+# Define transverse simulation grid
+#
+
+# --- Symmetries.  Set for increased statistical efficiency.  These should
+#     only be used in cases where lattice symmetries and initial beam
+#     conditions and loads allow.  For no symmetry, set both options to false.
+w3d.l2symtry = false     # 2-fold symmetry
+w3d.l4symtry = false     # 4-fold symmetry
+
+# -- Grid extent and increments
+#     Chosen without consideration of symmetry. Consistently reset later 
+#     if symmetry operations are set.  
+
+r_grid = 8.*cm    # radial extent of grid 
+n_grid = 400      # number grid cells (no symmetries) 
 
 
+#
+# Particle moving
+#
+
+z_launch  = 66.540938  # Axial position in lattice to launch  beam 
+                       #   = ecr_z_extr defined in lattice file. 
+z_adv     = 69.2       # Axial position in lattice to advance to 
+
+ds = 2.*mm             # Axial advance step 
+
+# 
+# Particle loading 
+#
+
+nppg = 100.    # number of particles per grid cell
+
+
+# Distribution loads type 
+#  Comment: 
+#   * See stptcl routine for how loading works. 
+#   * Neutralization is NOT taken into account in the loading.    
+#   * At present, all species are loaded with the same value of distrbtn.  
+#   * rms equivalent beam loaded with the specified distribution from:  
+#     KV => KV Distribution 
+#
+#     SG => semi-Gaussian distribution 
+#             (KV density and local Gaussian angle spread about KV flutter) 
+#
+#     TE => Pseudoequilibrium with Thermal  Equilibrium form 
+#     WB => Pseudoequilibrium with Waterbag Equilibrium form
+#             The Pseudoequilibrium distributions use continuous focused 
+#             equilibrium forms which are canoically transformed to AG 
+#             symmetry of the lattice. 
+#
+#     For more info on loads, see review paper:
+#       Lund, Kikuchi, and Davidson, PRSTAB 12, 114801 (2009) 
+
+
+#w3d.distrbtn = "KV"          # initial KV distribution
+#w3d.distrbtn = "TE"          # initial thermal distribution
+w3d.distrbtn = "WB"           # initial waterbag distribution
+#w3d.distrbtn = "SG"          # initial semi-Gaussian distribution 
