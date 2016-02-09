@@ -673,25 +673,25 @@ def diag_hist(
       #hpekin(js=js,color=co,titles=false,yscale=1./A,lhzbeam=true)    
     ptitles("History: Kinetic Energy","z [m]","KeV/u", )
     fma()
-    # --- U species, in keV/u
-    for ii in sort(sp_U.keys()):
+    # --- Operating species, in keV/u
+    for ii in sort(sp_Operate.keys()):
       s = sp[ii]
       js = s.js
       co = s.color
       A  = s.mass/amu
       #hpekin(js=js,color=co,titles=false,yscale=1./A,lhzbeam=true)
-      plg(hl_ekin[0:top.jhist+1,js]/(A*kV),hl_zbeam[0:top.jhist+1],color=co)        
-    ptitles("History: U Species Kinetic Energy","z [m]","KeV/u", )
+      plg(hl_ekin[0:top.jhist+1,js]/(A*kV),hl_zbeam[0:top.jhist+1],color=co)
+    ptitles("History: Operating Species Kinetic Energy","z [m]","KeV/u", )
     fma()
-    # --- O species, in keV/u 
-    for ii in sort(sp_O.keys()):
+    # --- Support species, in keV/u 
+    for ii in sort(sp_Support.keys()):
       s = sp[ii]
       js = s.js
       co = s.color
       A  = s.mass/amu
       plg(hl_ekin[0:top.jhist+1,js]/(A*kV),hl_zbeam[0:top.jhist+1],color=co)        
       #hpekin(js=js,color=co,titles=false,yscale=1./A,lhzbeam=true) # Was getting wrong answer !!
-    ptitles("History: O Species Kinetic Energy","z [m]","KeV/u", )
+    ptitles("History: Support Species Kinetic Energy","z [m]","KeV/u", )
     fma()
     # --- By Target Species, in kV/Q
     #     Plot by KV/Q so you can see total potential gain falling through 
