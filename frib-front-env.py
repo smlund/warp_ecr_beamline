@@ -55,11 +55,11 @@ stepsize = (z_end - z_begin)/(stepnum - 1)
 
 # Data needed in Env. Model
 
-speciesq = append(U_charge_states, O_charge_states)*jperev
+speciesq = append(Operate_charge_states, Support_charge_states)*jperev
 
-speciesI = append(U_ibeam, O_ibeam)
+speciesI = append(Operate_ibeam, Support_ibeam)
 
-specieslist = append(U_species, O_species)
+specieslist = append(Operate_species, Support_species)
 
 
 
@@ -181,11 +181,11 @@ initialstates = []
 
 ## Kinetic energy
 
-for i in range(U_ns):
-	initialstates.append(U_ekin[i])
+for i in range(Operate_ns):
+	initialstates.append(Operate_ekin[i])
 	
-for i in range(O_ns):
-	initialstates.append(O_ekin[i])
+for i in range(Support_ns):
+	initialstates.append(Support_ekin[i])
 
 ## Initial rms-radius
 
