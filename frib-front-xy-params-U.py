@@ -187,6 +187,24 @@ Support_rp_x = 0.*ones(Operate_ns)
 Support_rp_y = 0.*ones(Operate_ns) 
 
 
+# Specify ion birth method to set beam canonical angular momentum. 
+# brith_mode = 0: Ions are born at launch point
+#              1: Ions are born with a canonical angular momentum specified by the user
+#              2: Ions are born in average field between the two peaks in B-field
+#              3: Ions are born randomly between the two peaks in B-field
+#
+#  * Angular velocities are injected to the ions to conserve the 
+#    statistical canonical angular momentum of the beam in method 2 & 3.  This only 
+#    takes into account the solenoidal compoenent of the ECR field.  
+
+birth_mode = 2
+
+## Input for birth_mode == 1
+rms_birth = 2.82
+bz0_birth = 1.2
+
+## Reference: rms_launch = 2.8 mm, bz0_launch = 2.15 T
+
 #
 # Define transverse simulation grid
 #
