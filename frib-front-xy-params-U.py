@@ -92,17 +92,17 @@ SourceBias = 35.*keV  # source voltage: set for Q_ref*SourceBias/A =>  4.9264706
 Operate_ekin = array(Operate_charge_states)*SourceBias
 Support_ekin = array(Support_charge_states)*SourceBias 
 
-# --- --- initial ion thermal temp/phase-space area 
+# --- --- initial ion thermal phase-space area 
 # 
 #  Approach: Allow setting of thermal phase-space area by either a temperature specification 
 #            OR a normalized rms emittance measure. Convert input values to a normalized rms 
 #            edge emittance to work with the Warp loader.  
 #
-#  init_emit_spec = "emitn"    => set by init_emitn 
-#                   or "temp"  => set by init_temp 
+#  init_ps_spec = "emitn"    => set by init_emitn 
+#                 or "temp"  => set by init_temp 
 # 
-#  init_emitn = Initial ion thermal rms normalized emittance [m-rad] ** NOT edge measure **
-#  init_temp  = Initial ion temp [eV] 
+#  emitn = Initial ion thermal rms normalized emittance [m-rad] ** NOT edge measure **
+#  temp  = Initial ion temp [eV] 
 #
 #  Notes:
 #  * Guilliaume:  Ions likely 2-3 eV and electrons few to 100s of keV.  
@@ -110,11 +110,42 @@ Support_ekin = array(Support_charge_states)*SourceBias
 #  * Previous simulations used 0.4*mm*mr thermal phase-space area launched outside of magnetic fields.      
 #  * Here we set only the thermal component of the emittance and the distribution is loaded without 
 #    correlation terms. Later we adjust correlation terms to set the value of the canonical angular 
-#    momentum as desired based on field values at launch and birth.    
+#    momentum as desired based on field values at launch and birth. 
+#  * Syntax is used to allow different beam sizes and temperatures for each species. Initial runs 
+#    may employ a common value for all species    
 
-init_emit_spec = "temp" 
-init_temp  = 3.          # initial temp [eV] 
-init_emitn = 0.4*mm*mr   # initial rms normalized emittance [m-rad]  
+init_ps_spec = "temp" 
+temp  = 3.          # initial temp [eV] 
+emitn = 0.4*mm*mr   # initial rms normalized emittance [m-rad]  ** NOT edge measure **
+
+Operate_temp = temp*ones(Operate_ns)  
+Support_temp = temp*ones(Support_ns) 
+
+Operate_emitnx = emitn*ones(Operate_ns)
+Operate_emitny = emitn*ones(Operate_ns)
+
+Support_emitnx = emitn*ones(Support_ns)
+Support_emitny = emitn*ones(Support_ns)
+
+# --- --- initial beam centroid 
+# 
+#   xc  = <x>   Initial centroid coordinate [m]
+#   xcp = <x'>  Initial centroid angle [rad] 
+# 
+#               Analogous y-plane measures 
+#
+
+Operate_xc  = zeros(Operate_ns) 
+Operate_xcp = zeros(Operate_ns)
+
+Operate_yc  = zeros(Operate_ns) 
+Operate_ycp = zeros(Operate_ns)
+
+Support_xc  = zeros(Operate_ns) 
+Support_xcp = zeros(Operate_ns)
+
+Support_yc  = zeros(Operate_ns) 
+Support_ycp = zeros(Operate_ns)
 
 # --- --- initial beam size: elliptical cross-section beam 
 #   
@@ -126,132 +157,35 @@ init_emitn = 0.4*mm*mr   # initial rms normalized emittance [m-rad]
 # Note:
 # * Now set r_x etc by fraction of ECR aperture size.  
 # * Previous simulations used betatron functions with a specific emittance value to get 
-#   desired beam size. 
-# * Was set by betatron functions and an emittance specification.  Commented out code (left 
-#   in for reference).   
+#   desired beam size. Code used was (y-plane similar):   
+#     alpha_x = 0.
+#     beta_x  = 12.9*cm
+#     gamma_x = (1. + alpha_x**2)/beta_x 
 #
-
-# ####################### OLD ... set by betatron funcs ###############
-#alpha_x = 0.
-#beta_x  = 12.9*cm
-#gamma_x = (1. + alpha_x**2)/beta_x 
+#     emitn_edge = 0.4*mm*mr   # norm rms edge emittance used to set beam size 
 #
-#alpha_y = 0.
-#beta_y  = 12.9*cm
-#gamma_y = (1. + alpha_y**2)/beta_y
+#     v_z_ref   = sqrt(2.*jperev*Q_ref*SourceBias/m_ref)  # nonrel approx ref z-velocity 
+#     gamma_ref = 1./sqrt(1.-(v_z_ref/clight)**2)         # ref axial gamma factor (approx 1) 
+#     emit_edge = emitn_edge/(gamma_ref*v_z_ref/clight)   # unnormalized rms edge emittance 
 #
-#emitn_edge = 0.4*mm*mr   # norm rms edge emittance used to set beam size in earlier simulations 
-#
-#v_z_ref   = sqrt(2.*jperev*Q_ref*SourceBias/m_ref)  # nonrel approx ref z-velocity 
-#gamma_ref = 1./sqrt(1.-(v_z_ref/clight)**2)         # ref axial gamma factor (approx 1) 
-#emit_edge = emitn_edge/(gamma_ref*v_z_ref/clight)   # unnormalized rms edge emittance 
-#
-#r_x  = sqrt(emit_edge*beta_x)             # envelope x-edge 
-#r_y  = sqrt(emit_edge*beta_y)             # envelope y-edge 
-#rp_x = -sqrt(emit_edge/beta_x)*alpha_x    # envelope x-angle 
-#rp_y = -sqrt(emit_edge/beta_y)*alpha_y    # envelope y-angle 
-# #######################
+#     r_x  = sqrt(emit_edge*beta_x)             # envelope x-edge 
+#     rp_x = -sqrt(emit_edge/beta_x)*alpha_x    # envelope x-angle 
 
 r_extractor = 4.*mm   # ECR extraction aperture radius [m]
                       #   Value both for Venus and Artemis A,B ECR Sources 
 
-r_x = r_extractor  
-r_y = r_extractor
-rp_x = 0. 
-rp_y = 0. 
+Operate_r_x = r_extractor*ones(Operate_ns)  
+Operate_r_y = r_extractor*ones(Operate_ns)
 
+Operate_rp_x = 0.*ones(Operate_ns) 
+Operate_rp_y = 0.*ones(Operate_ns) 
 
-## --- transverse thermal velocity and energy (eV) of nonrel ref particle from emittance 
-#
-#vt = v_z_ref*emit_edge/(2.*r_x) 
-#Et = 0.5*m_ref*vt**2/jperev 
-#
-## --- intrinsic thermal emittance scale 
-#Et_therm = 3.   # Guilliaume's estimated ion temp scale (eV) 
-#vt_therm = sqrt(2.*(jperev*Et_therm)/m_ref)
-#emit_therm  = 2.*r_x*vt_therm/v_z_ref
-#emitn_therm = (gamma_ref*v_z_ref/clight)*emit_therm
-#
-## Ratio of thermal to edge emittance suggests value of P_theta contributing to effective emittance 
-## emit_therm/emit_edge = 0.10  => most beam PS area from P_theta  
+Support_r_x = r_extractor*ones(Operate_ns)  
+Support_r_y = r_extractor*ones(Operate_ns)
 
-# --- Set properties of initial species load 
+Support_rp_x = 0.*ones(Operate_ns) 
+Support_rp_y = 0.*ones(Operate_ns) 
 
-for i in range(Operate_ns):
-  Osp = Operate_species[i]
-  ekin_i  = Operate_ekin[i]
-  betab_i = sqrt(2.*jperev*ekin_i/Osp.sm)/clight
-  if init_emit_spec == "emitn":
-    emitn_therm_edge = 4.*init_emitn 
-  elif init_emit_spec == "temp": 
-    emitn_therm_edge = betab_i*((2.*r_x)/sqrt(2.))*sqrt(init_temp/ekin_i)
-  else:
-    raise Exception("Error: init_emit_spec not set properly") 
-  #
-  Osp.ekin   = ekin_i              # kinetic energy of beam particle [eV]
-  Osp.vbeam  = 0.                  # beam axial velocity [m/sec] (set from ekin if 0) 
-  Osp.ibeam  = Operate_ibeam[i]    # beam current [amps] 
-  Osp.emitnx = emitn_therm_edge    # beam x-emittance, rms edge [m-rad] 
-  Osp.emitny = emitn_therm_edge    # beam y-emittance, rms edge [m-rad]
-  Osp.vthz   = 0.                  # axial velocity spread [m/sec] 
-
-for i in range(Support_ns):
-  Ssp = Support_species[i]
-  ekin_i  = Support_ekin[i]
-  betab_i = sqrt(2.*jperev*ekin_i/Ssp.sm)/clight
-  if init_emit_spec == "emitn":
-    emitn_therm_edge = 4.*init_emitn 
-  elif init_emit_spec == "temp": 
-    emitn_therm_edge = betab_i*((2.*r_x)/sqrt(2.))*sqrt(init_temp/ekin_i)
-  else:
-    raise Exception("Error: init_emit_spec not set properly") 
-  # 
-  Ssp.ekin   = ekin_i  
-  Ssp.vbeam  = 0.
-  Ssp.ibeam  = Support_ibeam[i]
-  Ssp.emitnx = emitn_therm_edge 
-  Ssp.emitny = emitn_therm_edge
-  Ssp.vthz   = 0.
-
-
-#
-# Beam centroid and rms envelope initial conditions at s=0      
-#    
-#   x0:   initial x-centroid xc = <x> [m]
-#   y0:   initial y-centroid yc = <y> [m]
-#   xp0:  initial x-centroid angle xc' = <x'> = d<x>/ds [rad]
-#   yp0:  initial y-centroid angle yc' = <y'> = d<y>/ds [rad]
-#
-#   a0:   initial x-envelope edge a = 2*sqrt(<(x-xc)^2>) [m]
-#   b0:   initial y-envelope edge b = 2*sqrt(<(y-yc)^2>) [m]
-#   ap0:  initial x-envelope angle ap = a' = d a/ds [rad]
-#   bp0:  initial y-envelope angle bp = b' = d b/ds [rad]
-
-for i in range(Operate_ns):
-  Osp = Operate_species[i]
-  # --- centroid 
-  Osp.x0  = 0.
-  Osp.y0  = 0.
-  Osp.xp0 = 0.
-  Osp.yp0 = 0.
-  # --- envelope 
-  Osp.a0   = r_x
-  Osp.b0   = r_y
-  Osp.ap0  = rp_x
-  Osp.bp0  = rp_y
-
-for i in range(Support_ns):
-  Ssp = Support_species[i]
-  # --- centroid 
-  Ssp.x0  = 0.   
-  Ssp.y0  = 0.   
-  Ssp.xp0 = 0.   
-  Ssp.yp0 = 0.   
-  # --- envelope 
-  Ssp.a0   = r_x              
-  Ssp.b0   = r_y           
-  Ssp.ap0  = rp_x  
-  Ssp.bp0  = rp_y  
 
 #
 # Define transverse simulation grid
