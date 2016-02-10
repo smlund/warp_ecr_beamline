@@ -468,9 +468,13 @@ printtimers()
 
 
 # Multi-Species Envelope Model 
-#   Create overlay using axisymmetric, multi-species envelope model
 
 execfile("frib-front-env.py")
+
+# Diagnostics to compare envelope model to Warp xy simulation 
+
+execfile("frib-front-env-diag.py")
+
 
 # Make sure that last plot is flushed from buffer
 fma() 
