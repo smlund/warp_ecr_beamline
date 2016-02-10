@@ -1,56 +1,69 @@
+# Axisymmetric envelope model solution.
+#   * Designed to use in a variety of simulations with inputs set accordingly. 
+#   * Setup below for use in front end simulation script frib-front-xy.py 
 
-# set z_begin and z_end, default equals to z_launch and z_adv in accordance with setup in frib-front-xy.py
+#########################
+# Begin Inputs 
+#########################
+
+# Range to advance envelope and increment of advance 
 
 z_begin = z_launch
-z_end = z_adv
+z_end   = z_adv
+env_ds = 0.005 
 
-CorrectionMode = 1 #set velocity correction method: 0 - no correction, 1 - dBdz only, 2 - dBdz + d2Edz2
+# Velocity correction method: 
+#  CorrectionMode = 0 - no correction
+#                   1 - dBdz only      (magnetic field) 
+#                   2 - dBdz + d2Edz2  (electric field)
+#
+CorrectionMode = 1 
 
-# set neutralization mode
-# 0: same neutralization factor throughout
-# 1: different neutralization factor in different regions
-# default setup is neut_mode = 1 in accordance with frib-front-lat.py
-# neut_f = 0 means no neutralization, neut_f = 1 means full neutralization
+# Neutralization mode
+#  neut_mode = 0: same neutralization factor throughout
+#              1: different neutralization factor in different regions
+#
+#  neut_mode = 0:
+#    neut_f = neutralization factor 
+#  neut_mode = 1:
+#   neut_region_boundaries = array of z locations to use neutralization factors
+#   neut_region_factors    = array of neutralization factors to apply within 
+#                              specified boundaries. 
+#      Ex:  If 0.1 neutralization for 0 < z < 0.5 
+#           and 0.9 neutralization for 0.5 < z < 1:
+#            neut_region_boundaries = [0., 0.5, 1.]
+#            neut_region_factors = [0.1, 0.9]
+#
+#   * neut_mode = 0, neut_f = 0 means no neutralization 
+#   * neut_mode = 0, neut_f = 1 means full neutralization
 
 neut_mode = 1
 
-# if neut_mode == 0, specify the neutralization factor
+neut_f    = 0.75 
 
-neut_f = 0.75 
+neut_region_boundaries = [z_begin, neut_z1,  neut_z2, z_end]
+neut_region_factors    = [         0.75, 0., 0.75          ]
 
-# if neut_mode == 1, split into different regions and set the respective neut_f
-# split the space into regions by specifying the region boundaries
 
-# for example, if neut_f = 0.1 for 0 < z < 0.5 and neut_f = 0.9 for 0.5 < z < 1:
-# neut_region_boundaries = [0., 0.5, 1.]
-# neut_region_factors = [0.1, 0.9]
+#########################
+# End Inputs 
+#########################
 
-neut_region_boundaries = [z_begin, neut_z1, neut_z2, z_end]
-neut_region_factors = [0.75, 0., 0.75]
-
+# Import ode solver 
+from scipy.integrate import odeint
 
 # make sure that len(neut_region_boundaries) = len(neut_region_factors) + 1
 if neut_mode == 1:
 	if len(neut_region_boundaries) != len(neut_region_factors) + 1:
 		raise exception("faulty neutralization region setup")
 
+# Make time array for solution based on advance range and step size
 
-
-
-
-
-from scipy.integrate import odeint
-
-
-# Make time array for solution
-
-stepnum = int(round((z_end - z_begin)/0.005))
+stepnum = int(round((z_end - z_begin)/env_ds))
 
 sss = linspace(z_begin, z_end, stepnum)
 
 stepsize = (z_end - z_begin)/(stepnum - 1)
-
-
 
 
 # Data needed in Env. Model
@@ -204,10 +217,6 @@ for i in range(top.ns):
 
 psoln = odeint (f, initialstates, sss, hmax = stepsize, mxstep=5000)
 
-
-# Load the diagnostic associated with the Env. Model
-
-execfile("frib-front-env-diag.py")
 
 
 
