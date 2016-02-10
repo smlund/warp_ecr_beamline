@@ -1,28 +1,11 @@
-## Methods of Ion Birth
-
-# 0: Ions are born at launch point
-# 1: Ions are born with a canonical angular momentum specified by the user
-# 2: Ions are born in average field between the two peaks in B-field
-# 3: Ions are born randomly between the two peaks in B-field
-
-# Angular velocities are injected to the ions to conserve the average canonical angular momentum of the beam in method 2 & 3
-
-birth_mode = 2
-
-## Input for birth_mode == 1
-rms_birth = 2.82
-bz0_birth = 1.2
-
-## Reference: rms_launch = 2.8 mm, bz0_launch = 2.15 T
-
-
+# Load adjustment to account for beam canonical angular momentum.  
+# Used in front end simulation script frib-front-xy.py 
 
 
 # Beam loading for the 0th birth mode
 
 #if birth_mode == 0, nothing needs to be done
-	
-	
+		
 
 # Beam loading for the 1st birth mode
 
@@ -211,9 +194,7 @@ if birth_mode == 3:
 			  s.uyp[pname] += krot_launch*s.xp[pname]*s.uzp[pname]
 
 
-#raise Exception("to here")
-
-# --- make plots of initial rotation by species at launch point and if transported in vacuuo    
+# Plots of initial rotation by species at launch point
 
 def diag_plt_krot_launch(): 
   for ii in sp.keys():
@@ -242,7 +223,3 @@ def diag_plt_krot_v():
   limits(qovm_min-qovm_pad,qovm_max+qovm_pad,krot_v_min-krot_v_pad,krot_v_max+krot_v_pad) 
   ptitles("Angular Phase Advance Wavenumber: Beam Launch in Bz=0","Q/A","Wavenumber [Rad/m]",)
   fma()
-
-if birth_mode == 1 or birth_mode == 2:
-	diag_plt_krot_launch() 
-	diag_plt_krot_v()
