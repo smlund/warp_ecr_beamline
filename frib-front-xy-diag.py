@@ -170,6 +170,8 @@ def plt_diag_bro(label=None):
   fma()
 
 
+
+
 # Potential profile plot diagnostic for potential along x-y axes 
 # * Primarily for initial beam but should work at any point in simulation. 
 

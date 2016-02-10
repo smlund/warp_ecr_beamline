@@ -341,12 +341,17 @@ savehist(0.)
 # Read in diagnostics for slice run 
 execfile("frib-front-xy-diag.py") 
 
-# Loading ion at launch point based on different assumptions on their birth in the ECR
-# Modify intital distribution loaded on generate to include canonical angular momentum
+# Modify ion distribution at launch point based on different assumptions on their birth 
+#  in the ECR to reflect a target value of beam canonical angular momentum.  
 
 execfile("frib-front-xy-load.py")
 
-diag_hist_hl()   # make sure initial diagnostics saved before any steps 
+if birth_mode == 1 or birth_mode == 2:
+	diag_plt_krot_launch() 
+	diag_plt_krot_v()
+
+# make sure initial diagnostics saved before any steps 
+diag_hist_hl()   
 
 # Make plot of initial unneutralized beam potential profile 
          
