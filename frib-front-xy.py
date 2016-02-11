@@ -127,74 +127,45 @@ for ii in sort(sp.keys()):
 #     * See notes for logic of formulas.  Note: Warp uses rms edge measures in loads. 
 #         Care must be taken to consitently set various factors in coefficients.  
 
-for i in range(Operate_ns):
-  Osp = Operate_species[i]
-  ekin_i  = Operate_ekin[i]
-  betab_i = sqrt(2.*jperev*ekin_i/Osp.sm)/clight
-  rb_i    = sqrt(Operate_r_x[i]*Operate_r_y[i])    # take mean measure in case inhomogeneous
-  emitn_i = sqrt(Operate_emitnx[i]*Operate_emitny[i])
-  temp_i  = Operate_temp[i]  
+for s in sp.keys():
+  ekin_i  = ekin[s]
+  betab_i = sqrt(2.*jperev*ekin_i/sp[s].sm)/clight   # NR beta associated the KE 
+  #
+  rb_i    = sqrt(rx[s]*ry[s])          # take mean measure in case inhomogeneous
+  #
+  emitn_i = sqrt(emitnx[s]*emitny[s])  # take mean measure in case inhomogeneous  
+  temp_i  = temp_p[s]  
   if init_ps_spec == "emitn":
-    emitn_therm_edge = 4.*emitn_i 
+    emitn_edge_i = 4.*emitn_i 
   elif init_ps_spec == "temp": 
-    emitn_therm_edge = betab_i*((2.*rb_i)/sqrt(2.))*sqrt(temp_i/ekin_i)
+    emitn_edge_i = betab_i*((2.*rb_i)/sqrt(2.))*sqrt(temp_i/ekin_i)
   else:
     raise Exception("Error: init_emit_spec not set properly") 
+  #
+  vthz_i = sqrt(2.*jperev*temp_z[s]/sp[s].sm)   
   # --- Energy and Current 
-  Osp.ekin   = ekin_i              # kinetic energy of beam particle [eV]
-  Osp.vbeam  = 0.                  # beam axial velocity [m/sec] (set from ekin if 0) 
-  Osp.ibeam  = Operate_ibeam[i]    # beam current [amps] 
+  sp[s].ekin   = ekin[s]             # kinetic energy of beam particle [eV]
+  sp[s].vbeam  = 0.                  # beam axial velocity [m/sec] (set from ekin if 0) 
+  sp[s].ibeam  = ibeam[s]            # beam current [amps] 
   # --- Perp PS areas and Par temp 
-  Osp.emitnx = emitn_therm_edge    # beam x-emittance, rms edge [m-rad] 
-  Osp.emitny = emitn_therm_edge    # beam y-emittance, rms edge [m-rad]
-  Osp.vthz   = 0.                  # axial velocity spread [m/sec] 
+  sp[s].emitnx = emitn_edge_i        # beam x-emittance, rms edge [m-rad] 
+  sp[s].emitny = emitn_edge_i        # beam y-emittance, rms edge [m-rad]
+  sp[s].vthz   = vthz_i              # axial velocity spread [m/sec] 
   # --- centroid 
-  Osp.x0  = Operate_xc[i]  #   x0:   initial x-centroid xc = <x> [m]
-  Osp.y0  = Operate_yc[i]  #   y0:   initial y-centroid yc = <y> [m]
-  Osp.xp0 = Operate_xcp[i] #   xp0:  initial x-centroid angle xc' = <x'> = d<x>/ds [rad]
-  Osp.yp0 = Operate_ycp[i] #   yp0:  initial y-centroid angle yc' = <y'> = d<y>/ds [rad]
+  sp[s].x0  = xc[s]  #   x0:   initial x-centroid xc = <x> [m]
+  sp[s].y0  = yc[s]  #   y0:   initial y-centroid yc = <y> [m]
+  sp[s].xp0 = xcp[s] #   xp0:  initial x-centroid angle xc' = <x'> = d<x>/ds [rad]
+  sp[s].yp0 = ycp[s] #   yp0:  initial y-centroid angle yc' = <y'> = d<y>/ds [rad]
   # --- envelope 
-  Osp.a0   = Operate_r_x[i]   #   a0:   initial x-envelope edge a = 2*sqrt(<(x-xc)^2>) [m]
-  Osp.b0   = Operate_r_y[i]   #   b0:   initial y-envelope edge b = 2*sqrt(<(y-yc)^2>) [m]
-  Osp.ap0  = Operate_rp_x[i]  #   ap0:  initial x-envelope angle ap = a' = d a/ds [rad]
-  Osp.bp0  = Operate_rp_y[i]  #   bp0:  initial y-envelope angle bp = b' = d b/ds [rad]
+  sp[s].a0   = rx[s]   #   a0:   initial x-envelope edge a = 2*sqrt(<(x-xc)^2>) [m]
+  sp[s].b0   = ry[s]   #   b0:   initial y-envelope edge b = 2*sqrt(<(y-yc)^2>) [m]
+  sp[s].ap0  = rxp[s]  #   ap0:  initial x-envelope angle ap = a' = d a/ds [rad]
+  sp[s].bp0  = ryp[s]  #   bp0:  initial y-envelope angle bp = b' = d b/ds [rad]
 
-
-for i in range(Support_ns):
-  Ssp = Support_species[i]
-  ekin_i  = Support_ekin[i]
-  betab_i = sqrt(2.*jperev*ekin_i/Ssp.sm)/clight
-  rb_i    = sqrt(Support_r_x[i]*Support_r_y[i])    # take mean measure in case inhomogeneous
-  emitn_i = sqrt(Support_emitnx[i]*Support_emitny[i])
-  temp_i  = Support_temp[i]  
-  if init_ps_spec == "emitn":
-    emitn_therm_edge = 4.*init_emitn_i  
-  elif init_ps_spec == "temp": 
-    emitn_therm_edge = betab_i*((2.*rb_i)/sqrt(2.))*sqrt(temp_i/ekin_i)
-  else:
-    raise Exception("Error: init_emit_spec not set properly") 
-  # --- energy and current 
-  Ssp.ekin   = ekin_i  
-  Ssp.vbeam  = 0.
-  Ssp.ibeam  = Support_ibeam[i]
-  # --- Perp PS areas and Par temp 
-  Ssp.emitnx = emitn_therm_edge 
-  Ssp.emitny = emitn_therm_edge
-  Ssp.vthz   = 0.
-  # --- centroid 
-  Ssp.x0  = Support_xc[i]   
-  Ssp.y0  = Support_yc[i]
-  Ssp.xp0 = Support_xcp[i]   
-  Ssp.yp0 = Support_ycp[i] 
-  # --- envelope 
-  Ssp.a0   = Support_r_x[i]              
-  Ssp.b0   = Support_r_y[i]           
-  Ssp.ap0  = Support_rp_x[i]  
-  Ssp.bp0  = Support_rp_y[i]  
 
 # --- Max beam size measures to set distribution load properties 
-r_x = maxnd(Operate_r_x,Support_r_x)
-r_y = maxnd(Operate_r_y,Support_r_y)
+r_x = maxnd(rx.values())
+r_y = maxnd(ry.values())
 
 
 #
