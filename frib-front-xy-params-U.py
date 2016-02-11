@@ -29,9 +29,18 @@ Support_charge_states = [1,2,3,4]
 Operate_species = [Species(type=Uranium,charge_state=i,name='U%d'%i) for i in Operate_charge_states]
 Support_species = [Species(type=Oxygen, charge_state=i,name='O%d'%i) for i in Support_charge_states]
 
+# --- Make charge state dictionary 
+Operate_charge_states_dict = {'U%d'%i: i for i in Operate_charge_states} 
+Support_charge_states_dict = {'O%d'%i: i for i in Support_charge_states} 
+
+charge_states = {} 
+charge_states.update(Operate_charge_states_dict)
+charge_states.update(Support_charge_states_dict) 
+
 # --- Count species 
 Operate_ns = len(Operate_species) 
 Support_ns = len(Support_species) 
+nspecies = Operate_ns + Support_ns 
 
 # --- Make abbreviated dictionary of species "sp" for cleaner use in later diagnostics 
 #       sp.keys()
@@ -71,7 +80,7 @@ sp['U38'].color = "cyan"
 sp['U39'].color = "cyan"
 sp['U40'].color = "cyan"
 
-# --- Target species tuple for later use in diagnostics 
+# --- Target species list for later use in diagnostics 
 sp_target = ['U33','U34']
 
 # --- Set species properties for injection 
@@ -82,17 +91,46 @@ sp_target = ['U33','U34']
 #           ekin  = 0    => set ekin  from vbeam
 #
 
-# --- --- unneutralized electric currents ... array elements corresponding to charge state arrays  
+# --- --- unneutralized electric currents
+#           Set in a named dictionary ibeam. Data from ECR measurement data.    
 Operate_ibeam = array([0.210,0.205,0.035,0.051,0.068,0.088,0.115,0.150,0.175,0.192,0.178,0.142,0.110,0.072,0.043,0.031])*mA 
 Support_ibeam = array([0.300,0.300,0.300,0.200])*mA 
 
-# --- --- kinetic energy 
+ibeam = {
+'U25': 0.035*mA,
+'U26': 0.051*mA,
+'U27': 0.068*mA,
+'U28': 0.088*mA,
+'U39': 0.115*mA,
+'U30': 0.150*mA,
+'U31': 0.175*mA,
+'U32': 0.192*mA,
+'U33': 0.210*mA,  
+'U34': 0.205*mA,
+'U35': 0.178*mA,
+'U36': 0.142*mA,
+'U37': 0.110*mA,
+'U38': 0.072*mA,
+'U39': 0.043*mA,
+'U40': 0.031*mA,
+'O1': 0.300*mA,
+'O2': 0.300*mA,
+'O3': 0.300*mA,
+'O4': 0.200*mA
+         }
+
+# --- --- kinetic energy
+#          Set as Q*SourceBias in a dictionary ekin 
 SourceBias = 35.*keV  # source voltage: set for Q_ref*SourceBias/A =>  4.9264706 keV/u for U 
 
 Operate_ekin = array(Operate_charge_states)*SourceBias
 Support_ekin = array(Support_charge_states)*SourceBias 
 
+ekin = {key: SourceBias*charge_states[key] for key in sp.keys()} 
+
 # --- --- initial ion thermal phase-space area 
+#           Set in species-named dictionaries
+#            * Can set individual values as in ibeam. 
 # 
 #  Approach: Allow setting of thermal phase-space area by either a temperature specification 
 #            OR a normalized rms emittance measure. Convert input values to a normalized rms 
@@ -115,17 +153,22 @@ Support_ekin = array(Support_charge_states)*SourceBias
 #    may employ a common value for all species    
 
 init_ps_spec = "temp" 
-temp  = 3.          # initial temp [eV] 
-emitn = 0.4*mm*mr   # initial rms normalized emittance [m-rad]  ** NOT edge measure **
+temp_ion  = 3.          # initial ion temp [eV] 
+emitn     = 0.4*mm*mr   # initial rms normalized emittance [m-rad]  ** NOT edge measure **
 
-Operate_temp = temp*ones(Operate_ns)  
-Support_temp = temp*ones(Support_ns) 
+Operate_temp = temp_ion*ones(Operate_ns)  
+Support_temp = temp_ion*ones(Support_ns) 
+
+temp = {key: temp_ion for key in sp.keys()} 
 
 Operate_emitnx = emitn*ones(Operate_ns)
 Operate_emitny = emitn*ones(Operate_ns)
 
 Support_emitnx = emitn*ones(Support_ns)
 Support_emitny = emitn*ones(Support_ns)
+
+emitnx = {key: emitn for key in sp.keys()}
+emitny = {key: emitn for key in sp.keys()}
 
 # --- --- initial beam centroid 
 # 
@@ -146,6 +189,13 @@ Support_xcp = zeros(Operate_ns)
 
 Support_yc  = zeros(Operate_ns) 
 Support_ycp = zeros(Operate_ns)
+
+xc  = {key: 0. for key in sp.keys()}
+yc  = {key: 0. for key in sp.keys()}
+
+xcp = {key: 0. for key in sp.keys()}
+ycp = {key: 0. for key in sp.keys()}
+
 
 # --- --- initial beam size: elliptical cross-section beam 
 #   
@@ -185,6 +235,12 @@ Support_r_y = r_extractor*ones(Operate_ns)
 
 Support_rp_x = 0.*ones(Operate_ns) 
 Support_rp_y = 0.*ones(Operate_ns) 
+
+rx  = {key: r_extractor for key in sp.keys()}
+ry  = {key: r_extractor for key in sp.keys()}
+
+rxp = {key: 0. for key in sp.keys()}
+ryp = {key: 0. for key in sp.keys()}
 
 
 # Specify ion birth method to set beam canonical angular momentum. 
