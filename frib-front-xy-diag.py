@@ -6,9 +6,9 @@
 #  * Model allows easy generalization to include diagnostic quantities not 
 #    in the usual Warp suite.  
 
-######################################################################################################
+##############################################################################
 # Begin Inputs 
-######################################################################################################
+##############################################################################
 
 # Diagnostic Parameters 
 # Diagnostics are grouped into several classes:
@@ -539,14 +539,37 @@ def diag_part(plt_xy=False,plt_xxp=False,plt_yyp=False,plt_xpyp=False,
     den[1:nr+1] = weightr[1:nr+1]/(2.*pi*dr*rmesh[1:nr+1])
     den[0]      = den[1]   # set origin by next grid up to remove distraction
     # 
-    plg(den/cm**3, rmesh/mm)
-    plg(den/cm**3,-rmesh/mm) 
+    plg(den/cm**3, rmesh/mm)  # pos axis 
+    plg(den/cm**3,-rmesh/mm)  # neg axis 
     ptitles("Radial Number Density: All Species, z = %5.2f m"%(top.zbeam),"radius r [mm]","rho [particles/cm**3]",z_label)
     ir = min(nr,sum(where(den>0,1,0)))      # index farthest radial extent of rho in radial mesh assuming no halo  
     rmmax = max(1.2*rmesh[ir],0.01) # set curoff to contain radial density  
     rmmax = cm*nint(rmmax/cm + 0.5) # round up to nearest cm to contain plot 
     denmax = 1.2*maxnd(den) 
     limits(-rmmax/mm,rmmax/mm,0.,denmax/cm**3)
+    fma() 
+    # --- for all species (common log scale)  
+    for ii in sp.keys():
+       s  = sp[ii]
+       co = s.color 
+       #
+       np = s.getn() 
+       rp = s.getr() 
+       wp = s.getweights()
+       #
+       weightr = zeros(nr+1)   # reset for clean accumulation/count with itask = 1 
+       count   = zeros(nr+1)   
+       deposgrid1d(1,np,rp,wp,nr,weightr,count,0.,rmax)
+       # 
+       den[1:nr+1] = weightr[1:nr+1]/(2.*pi*dr*rmesh[1:nr+1])
+       den[0]      = den[1]   # set origin by next grid up to remove distraction (origin location high noise) 
+       # 
+       plg(den/cm**3, rmesh/mm,color=co)
+       plg(den/cm**3,-rmesh/mm,color=co) 
+    #
+    ptitles("Radial Number Density: All species, z = %5.2f m"%(top.zbeam),"radius r [mm]","rho [particles/cm**3]",z_label)
+    limits(-rmmax/mm,rmmax/mm,1.e-4*denmax/cm**3,denmax/cm**3)
+    logxy(0,1)  # specify log scale on y-axis 
     fma() 
     # --- for target species on mesh 
     for ii in sp_target:
