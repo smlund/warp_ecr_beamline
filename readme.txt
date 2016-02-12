@@ -19,7 +19,7 @@ wong@nscl.msu.edu
 
 To initialize the repository, 
 
-   % git clone  git@github.com:smlund/warp_ion_frontend.git
+   % git clone https://github.com/smlund/warp_ion_frontend
 
 This will create a directory, ./warp_ion_frontend where command was 
 run with the archive files.   
