@@ -245,8 +245,9 @@ w3d.boundxy = 0              # Neuman boundary conditions on edge of grid.
 w3d.solvergeom = w3d.XYgeom  # fieldsolve type to 2d multigrid 
 
 # --- Uncomment to turn off space-charge deposition for simulation of particles 
-#     moving in applied field  
-#top.depos = "none"
+#     moving in applied field 
+ 
+if single_particle: top.depos = "none"
 
 
 # Turn on x-window plots, if desired; use winkill() to close interactively.  

@@ -241,8 +241,14 @@ bz0_birth = 1.2         # magnetic field at birth point [T].
 ## Reference: rms_launch = 2.8 mm, bz0_launch = 2.15 T
 
 #
-# Define transverse simulation grid
+# Define transverse simulation grid and properties of self-field solver 
 #
+
+# --- Single particle run
+#       single_particle = flag to control whether to advance as a single particle run 
+#                         True  => advance as single particles in applied field
+#                         False => Advance with self-field and any neutralization factors 
+single_particle = False   
 
 # --- Symmetries.  Set for increased statistical efficiency.  These should
 #     only be used in cases where lattice symmetries and initial beam
