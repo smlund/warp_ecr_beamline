@@ -324,6 +324,7 @@ def rho_neut_f(z):
   return(f) 
   
 
+# *** DELETE BEGIN  Below after envelope code cleaned up to use new neutralization function ***
 #  Break points z1 and z2 correspond to z values where neutralization is turned off and then 
 #    back on so the beam is unneutralized in the grated acceleration gap.  
 
@@ -332,6 +333,9 @@ neut_z2 = gag_zc + 22.28*cm
 
 neut_f1 = 0.75                 # corresponding electron neutralization factors 
 neut_f2 = 0.75  
+
+# *** DELETE END *** 
+
 
 # Aperture specfications 
 #   load scraper after generation of pic code  
