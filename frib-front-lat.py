@@ -288,6 +288,42 @@ else:
 
 
 # Neutralization specifications 
+#
+#    Define neutralization fraction function rho_neut_f(z) that returns the neutralization fraction 
+#    based on axial location z within the lattice. Values of rho_neut_f() are set by arrays:
+#      
+#       neut_z    = []   Break points in lattice with neutralization fraction [m]
+#       neut_frac = []   Neutralization fraction to the right of corresponding break point: 
+#                         0 = no neut, 1 = full neut 
+#
+#    * neut_z values must be in numerical order. 
+#    * neut_frac should be the same dimension as neut_z 
+#
+
+
+neut_z = \
+array(
+[ecr_z_extr - 10.*cm, # z to the left of ECR extraction point ... beam should be launched to right  
+ gag_zc - 20.90*cm,   # z of neut stop before grated gap, set where 1% of gap E_z field reached 
+ gag_zc + 22.28*cm    # z of neut stop after  grated gap, set where 1% of gap E_z field reached
+]    )
+
+neut_frac = \
+array(
+[0.75, 
+ 0., 
+ 0.75
+]    )
+
+
+def rho_neut_f(z):
+  # --- Find index giving location in neutralization fraction array 
+  index = sum(where(z/neut_z >= 1., 1, 0)) - 1  
+  # --- Return neutralization fraction with no error checking to allow flexability
+  f = neut_frac[index] 
+  return(f) 
+  
+
 #  Break points z1 and z2 correspond to z values where neutralization is turned off and then 
 #    back on so the beam is unneutralized in the grated acceleration gap.  
 
