@@ -290,19 +290,22 @@ fieldsolve()
 #       w0 = initial weight (same for all particles in species) 
 #       species.w = array of variable weight factors 
 for s in sp.values():       
-  s.w0  = 1.-neut_f1
-  #s.w   = 1.-neut_f1   #?? why this commented out ?? 
+  s.w0  = 1.-rho_neut_f(top.zbeam)
   s.sw0    = s.sw       # save initial sw    (in case later changed)  
   s.vbeam0 = s.vbeam    # save initial vbeam (in case later changed)  
 
 # --- save initial uzp for all species at once 
 top.pgroup.pid[:,uzp0pid] = top.pgroup.uzp
 
-# --- adjust weights  
+# --- adjust species weights and particle scrape aperture   
 @callfrombeforeloadrho
 def adjustweights():
   for s in sp.values():
+    # --- species weights 
+    s.w0 = 1.-rho_neut_f(top.zbeam)
     s.w[:] = s.w0*s.pid[:,uzp0pid]/s.uzp
+    #  --- scraping aperture 
+    #top.prwall = ??
 
 # Fix intitial history diagnostics to account for species weight changes
 top.jhist = top.jhist-1   # needed to be minus 1 to reset save in right postion 
@@ -363,32 +366,7 @@ diag_calls()
 
 # Advance simulation specified steps 
 
-#raise "to here"
-
-# ---- to grated accel gap  
-n_step = nint((neut_z1-z_launch)/wxy.ds) 
-top.prwall = r_p_up    # consistent aperture 
-step(n_step)
-
-# --- reset species weights to turn off neutralization  
-for s in sp.values():
-   s.w0 = 1. 
-
-loadrho()     # applies adjusted species weights  
-fieldsolve()  # make field consistent with turned off neutralization 
-
-# --- unneutralized advance in acceleration column  
-n_step = nint((neut_z2-top.zbeam)/wxy.ds)
-top.prwall = gag_rp   # consistent aperture 
-step(n_step)
-
-# --- reset species weights to turn on post accel gap neutralization  
-for s in sp.values():
-   s.w0 = 1.-neut_f2 
-
-# --- neutralized advance after acceleration column to start of dipole   
-n_step = nint((z_adv-top.zbeam)/wxy.ds) + 2   # add two extra steps in case of roundoff accumulation 
-top.prwall = r_p_down    # consistent aperture 
+n_step = nint((z_adv-z_launch)/wxy.ds) + 1   # add one step in case of roundoff 
 step(n_step)
 
 

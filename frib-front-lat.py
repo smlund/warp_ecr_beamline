@@ -298,6 +298,8 @@ else:
 #
 #    * neut_z values must be in numerical order. 
 #    * neut_frac should be the same dimension as neut_z 
+#    * Comment: Should generalize this structure to allow for different neutralization factors 
+#      by species.  
 #
 
 
@@ -338,7 +340,7 @@ neut_f2 = 0.75
 
 
 # Aperture specfications 
-#   load scraper after generation of pic code  
+#  
 
 r_p_up   = 8.00*cm 
 r_p_down = 7.62*cm 
