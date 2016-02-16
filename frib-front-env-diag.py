@@ -1,8 +1,4 @@
 
-# choose whether to integrate the ode using real-time warp data
-
-integratewarp = 0 # 0: no, 1: yes
-
 # plot envelopes of the two species with highest and lowest rigidities
 # 0: false, 1: true
 
@@ -30,20 +26,6 @@ species_env_vs_warp = ["U33"]
 species_terms_diff = ["U33"]
 
 species_ke_diff = ["U33", "U34"]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -94,125 +76,13 @@ for iii in range(0, top.jhist+1):
 		
 		term3 = ((speciesq[j]*bfieldz)/(2*specieslist[j].mass*speciesbeta[j]*clight))**2*xyz[j+top.ns]
 
-		emitterm = ((top.hepsr[0,iii,j]/2)**2 + (pthetalist[j] /speciesbeta[j])**2) / xyz[j+top.ns]**3
+		emitterm = ((hl_epsrn[iii,j]/speciesbeta[j])**2 + (pthetalist[j] /speciesbeta[j])**2) / xyz[j+top.ns]**3
 		
 		#d2sigmadz2 = term1 + term2 - term3 + scterm + emitterm
 		
 		#derivs.append(d2sigmadz2)
 		
 		termdatawarp.append([j, zzz, term1, term2, -term3, scterm, emitterm, xyz[j]])
-
-
-
-
-
-
-
-
-
-from scipy import interpolate
-
-state_vector_2 = [0]*3*top.ns
-
-dct = {}
-
-deltaz = stepsize/2.
-
-
-
-## Set up function used to integrate the Env. Model using real-time WARP data
-
-zlist = []
-		
-zlist = array([top.hzbeam[kkk] for kkk in range(0, top.jhist+1)])
-
-def fwarp(state_vector_2, rrr):
-	
-	efieldz = getappliedfields(0, 0, rrr)[2][0]
-	bfieldz = getappliedfields(0, 0, rrr)[5][0]
-	
-	dEdz = (getappliedfields(0, 0, rrr + deltaz/2)[2][0] - getappliedfields(0, 0, rrr - deltaz/2)[2][0])/deltaz
-	#dVdz = 0
-	
-	derivs = []
-	
-	for i in range(U_ns):
-		derivs.append(U_species[i].charge/jperev*efieldz) #build first lot in deriv output
-	
-	for i in range(O_ns):
-		derivs.append(O_species[i].charge/jperev*efieldz) #build first lot in deriv output
-	
-	for i in range(top.ns):
-		derivs.append(state_vector_2[i+2*top.ns]) #build second lot in deriv output
-	
-	speciesbeta = []
-	
-	for i in range(top.ns):
-		speciesbeta.append(sqrt((2*state_vector_2[i]*jperev)/(specieslist[i].mass*clight**2)))
-
-	## Set the neutralization factor
-	
-	neut_ode = get_neut(rrr)
-
-	for j in range(top.ns):
-		
-		scterm = 0
-		
-		
-		
-		emittancelist = []
-		
-		#for kkk in range(len(top.hepsr)):
-			#emittancelist = emittancelist.append(top.hepsr[0,kkk,j])
-		
-		emittancelist = array([top.hepsr[0,kkk,j]/2 for kkk in range(0, top.jhist+1)])
-		
-		pthetaLIST = []
-		
-		pthetaLIST = array([hl_pthn[kkk,j] for kkk in range(0, top.jhist+1)])
-		
-		kineticenergylist = []
-		
-		kineticenergylist = array([hl_ekin[kkk,j] for kkk in range(0, top.jhist+1)])
-		
-
-		emitinter = interpolate.interp1d(zlist, emittancelist, kind='slinear')
-		
-		pthetainter = interpolate.interp1d(zlist, pthetaLIST, kind='slinear')
-		
-		keinter = interpolate.interp1d(zlist, kineticenergylist, kind='slinear')
-		
-		for s in range(top.ns):
-			QQQ = (speciesq[j]*speciesI[s])/(2*pi*eps0*specieslist[j].mass*speciesbeta[j]**2*speciesbeta[s]*clight**3)
-			scterm += QQQ*neut_ode*state_vector_2[j+top.ns]/(state_vector_2[j+top.ns]**2 + state_vector_2[s+top.ns]**2)
-		
-		term1 = (speciesq[j]*-efieldz)/(2*state_vector_2[j]*jperev) * state_vector_2[j+2*top.ns]
-		
-		term2 = (speciesq[j]*-dEdz)/(4*state_vector_2[j]*jperev) * state_vector_2[j+top.ns]
-		
-		term3 = ((speciesq[j]*bfieldz)/(2*specieslist[j].mass*speciesbeta[j]*clight))**2*state_vector_2[j+top.ns]
-
-		emitterm = ((emitinter(rrr))**2 + (pthetainter(rrr) /speciesbeta[j])**2) / state_vector_2[j+top.ns]**3
-		
-		d2sigmadz2 = term1 + term2 - term3 + scterm + emitterm
-		
-		derivs.append(d2sigmadz2)
-		
-	return derivs
-		
-		
-if integratewarp == 1:
-	psolnwarp = odeint (fwarp, initialstates, sss, hmax = stepsize, mxstep=5000)
-
-
-
-
-
-
-
-
-
-
 
 
 
