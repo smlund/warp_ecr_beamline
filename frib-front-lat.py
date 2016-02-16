@@ -321,6 +321,7 @@ array(
 def rho_neut_f(z):
   # --- Find index giving location in neutralization fraction array 
   index = sum(where(z/neut_z >= 1., 1, 0)) - 1  
+  if index < 0: index = 0 
   # --- Return neutralization fraction with no error checking to allow flexability
   f = neut_frac[index] 
   return(f) 
@@ -340,18 +341,35 @@ neut_f2 = 0.75
 
 
 # Aperture specfications 
+#   
+#   r_ap   = array of aperture radii 
+#   v_ap   = array of aperture bias voltages 
+#   z_ap_l = array of aperture extent lower ranges 
+#   z_ap_u = array of aperture extent upper ranges 
 #  
+#   aperture_r(z):  function returning aperture at value of z 
+#
+#   * Arrays should be same dimension. 
+#   * Aperture is loaded into the xy simulation for fieldsolves.  
+#   * Aperture and bias does not matter in xy simulations, but try to use the right values for 
+#     consistent reference potential. 
+#   
 
-r_p_up   = 8.00*cm 
-r_p_down = 7.62*cm 
+r_p_up   = 8.00*cm  # aperture   upstream of grated gap [m]
+r_p_down = 7.62*cm  # aperture downstream of grated gap [m]
 
-r_ap   = [r_p_up,gag_rp,r_p_down]
-v_ap   = [SourceBias+StandBias,StandBias/2.,0.] 
-z_ap_l = [ecr_z_extr,  gag_col_zs, gag_col_ze]
-z_ap_u = [gag_col_zs,  gag_col_ze, d5p1_zc   ]
+r_ap   = array([r_p_up,               gag_rp,       r_p_down  ])
+v_ap   = array([SourceBias+StandBias, StandBias/2., 0.        ]) 
+z_ap_l = array([ecr_z_extr,           gag_col_zs,   gag_col_ze])
+z_ap_u = array([gag_col_zs,           gag_col_ze,   d5p1_zc   ])
 
 r_p = max(r_ap)   # Max aperture in simulations 
 
+def aperture_r(z):
+  index = sum(where(z/z_ap_l >= 1.,1,0))-1 
+  if index < 0: index = 0
+  # 
+  return(r_ap[index])  
 
 aperture = [] 
 for i in range(len(r_ap)):
