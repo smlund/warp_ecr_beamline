@@ -7,23 +7,30 @@
 #########################
 
 # Range to advance envelope and increment of advance 
+#  env_zs = start envelope advance [m]
+#  env_ze = end   envelope advance [m]
+#  env_ds = envelope solution step size [m]
 
-z_begin = z_launch
-z_end   = z_adv
-env_ds = 0.005 
+env_zs = z_launch
+env_ze = z_adv
+env_ds = 5.*mm  
 
-# Velocity correction method: 
-#  CorrectionMode = 0 - no correction
-#                   1 - dBdz only      (magnetic field) 
-#                   2 - dBdz + d2Edz2  (electric field)
+# Longitudinal velocity correction terms in envelope model 
+# 
+#  CorrectionMode = 0 - On-axis E_z only  
+#                   1 - On-axis E_z + dBdz term from magnetic field  
+#                   2 - On-axis E_z + dBdz term from magnetic field + d2Edz2 term from electric field
 #
+
 CorrectionMode = 1 
 
 
-# Solve Envelope Model using real-time Warp data?
-#   If yes, a separate solution of the envelope model is obtained where real-time
-#   phase space area and kinetic energy are used in the integrator
-integratewarp = 1 # 0: no, 1: yes
+# Solve Envelope Model using Warp simulation data 
+#   integratewarp = 1 yes: Use pic data for all z in integration range for energy, ps areas 
+#                 = 0 no : Use pic data at z_begin only  
+#   * Case 1 also generates case 0 solution 
+
+integratewarp = 1
 
 # Neutralization mode
 #  neut_mode = 0: same neutralization factor throughout
@@ -47,12 +54,16 @@ neut_mode = 1
 
 neut_f    = 0.75 
 
-neut_region_boundaries = [z_begin, neut_z1,  neut_z2, z_end]
+neut_region_boundaries = [env_zs, neut_z1,  neut_z2, env_ze]
 neut_region_factors    = [         0.75, 0., 0.75          ]
 
 # Numerical Integration Control
+#
+#  mxstep = number of steps to take in integration between env_zs and env_ze 
+#  rtol   = relative numerical tolerance 
+#  atol   = absolute numerical tolerance 
 
-mxstep = 5000 #
+mxstep = 5000
 rtol = 1.49012e-8
 atol = 1.49012e-8
 
@@ -71,38 +82,25 @@ if neut_mode == 1:
 
 # Make time array for solution based on advance range and step size
 
-stepnum = int(round((z_end - z_begin)/env_ds))
+stepnum = int(round((env_ze - env_zs)/env_ds))
 
-sss = linspace(z_begin, z_end, stepnum)
+sss = linspace(env_zs, env_ze, stepnum)
 
-stepsize = (z_end - z_begin)/(stepnum - 1)
+stepsize = (env_ze - env_zs)/(stepnum - 1)
 
 
 # Data needed in Env. Model
 
-#speciesq = append(Operate_charge_states, Support_charge_states)*jperev
-
-#speciesI = append(Operate_ibeam, Support_ibeam)
-
-#specieslist = append(Operate_species, Support_species)
-
-
-# Do away with lists 
-
-speciesq = [0]*top.ns
-
-speciesI = [0]*top.ns
-
-specieslist = [0]*top.ns
+speciesq    = zeros(top.ns)
+speciesI    = zeros(top.ns)
+specieslist = [0]*top.ns 
 
 for ii in sp.keys():
-	  s = sp[ii]
-	  js = s.js
-	  speciesq[js] = s.charge
-	  speciesI[js] = ibeam[ii]
-	  specieslist[js] = sp[ii]
-
-
+  s = sp[ii]
+  js = s.js
+  speciesq[js] = s.charge
+  speciesI[js] = ibeam[ii]
+  specieslist[js] = sp[ii]
 
 
 # state vector, for a total of n species
@@ -304,11 +302,11 @@ def fwarp(state_vector_2, rrr):
 		
 		keinter = interpolate.interp1d(zlist, kineticenergylist, kind='slinear')	
 			
-		if rrr <= z_begin:
+		if rrr <= env_zs:
 			emittance_j = hl_epsrn[0,j]
 			ptheta_j = hl_pthn[0,j]
 			ke_j = hl_ekin[0,j]
-		elif rrr >= z_end:
+		elif rrr >= env_ze:
 			emittance_j = hl_epsrn[top.jhist,j]
 			ptheta_j = hl_pthn[top.jhist,j]
 			ke_j = hl_ekin[top.jhist,j]		
