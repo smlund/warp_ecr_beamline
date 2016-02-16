@@ -258,38 +258,23 @@ if single_particle: top.depos = "none"
 # Particle simulation
 ################################
 
-# Generate the xy PIC code.  In the generate, particles are allocated and
-# loaded consistent with initial conditions and load parameters
-# set previously.  Particles are advanced with the step() command later
-# after various diagnostics are setup.
+# Generate the xy PIC code.  
+#   In the generate, particles are allocated and
+#   loaded consistent with initial conditions and load parameters
+#   set previously.  Particles are advanced with the step() command later
+#   after various diagnostics are setup.
+
 package("wxy"); generate()
 
-# Read in diagnostics for applied lattice fields 
+# Make diagnostics for applied lattice fields 
 execfile("frib-front-lat-diag.py") 
 
-# Install conducting aperture on mesh
+# Install conducting aperture on mesh for fieldsolves 
 for i in aperture:
   installconductors(i,dfill=largepos) # will trigger "list has no attribute" error if aperture is used in installconductors
 
 # Check that inputs are consistent with symmetries (errorcheck package function)
 checksymmetry()
-
-# ?? Why this here ??
-# --- Weight setup 
-for s in sp.values():       
-  s.w   = 1.      # Need full charge: set relative weight to unity 
-
-# Carry out an initial unneutralized field solve with conducting pipe after generate 
-#loadrho() 
-#fieldsolve() 
-
-# Make plot of initial unneutralized beam potential profile 
-         
-#diag_plt_phi_ax(label="Initial Unneutralized Beam Potential at y,x = 0 b,r") 
-#fma()
-
-#diag_plt_phi_ax(label="Initial Unneutralized Beam Potential at y,x = 0 b,r",xmax=1.5*r_x)
-#fma()
 
 # Setup variable weight species needs for neutralization and acceleration 
 
@@ -304,19 +289,17 @@ for s in sp.values():
 # --- save initial uzp for all species at once 
 top.pgroup.pid[:,uzp0pid] = top.pgroup.uzp
 
-# --- adjust species weights and particle scrape aperture   
+# --- Adjustments implemented particle advance: 
+#       Species weights and particle scrape aperture   
 @callfrombeforeloadrho
-def adjustweights():
+def adjustments_before_rho():
   for s in sp.values():
-    # --- species weights 
+    # --- Adjust species weights 
     s.w0 = 1.-rho_neut_f(top.zbeam)
     s.w[:] = s.w0*s.pid[:,uzp0pid]/s.uzp
-    #  --- scraping aperture 
+    #  --- Scraping scraping aperture:
+    #       Set for efficient removal of out of bounds particles. 
     top.prwall = aperture_r(top.zbeam)
-
-# Carry out explicit fieldsolve with adjusted rho consistent with neutralization 
-loadrho() 
-fieldsolve()
 
 
 # Modify ion distribution at launch point based on different assumptions on their birth 
@@ -328,6 +311,11 @@ if birth_mode == 1 or birth_mode == 2:
 	diag_plt_krot_launch() 
 	diag_plt_krot_v()
 
+# Carry out explicit fieldsolve with adjusted rho consistent with neutralization 
+adjustments_before_rho()
+loadrho() 
+fieldsolve()
+
 # Fix intitial history diagnostics to account for species weight changes
 top.jhist = top.jhist-1   # needed to be minus 1 to reset save in right postion 
 from warp.diagnostics.getzmom import *
@@ -337,20 +325,48 @@ savehist(0.)
 # Read in diagnostics for slice run 
 execfile("frib-front-xy-diag.py") 
 
-# make sure initial diagnostics saved before any steps 
+# Call initial history diagnostics accumulation to save initial load value 
+#  if flagged for accumulation.   
 diag_hist_hl()   
 
 # Plot initial Brho by species 
 plt_diag_bro(label = "Initial Rigidity by Species") 
 
-# Plot initial neutralized beam potential profile 
+# Plot initial beam potential profile 
          
-diag_plt_phi_ax(label="Initial f = %s Neutralized Beam Potential at y,x = 0 b,r"%(neut_f1))
+# --- neutralized 
+#       Using setup fields including neutralization 
+
+diag_plt_phi_ax(label="Initial f = %s Neutralized Beam Potential at y,x = 0 b,r"%(rho_neut_f(top.zbeam)))
 fma()
 
-diag_plt_phi_ax(label="Initial f = %s Neutralized Beam Potential at y,x = 0 b,r"%(neut_f1),xmax=1.5*r_x)
+diag_plt_phi_ax(label="Initial f = %s Neutralized Beam Potential at y,x = 0 b,r"%(rho_neut_f(top.zbeam)),xmax=1.5*r_x)
 fma()
 
+# *** Code below did not work.  Appear to get same plots as unneutralized case.  Error?  Must be triggering weight 
+#     adjustment if previous plots are correct.  
+## --- unneutralized 
+##       Must carry out fieldsolve with bare, unneutralized beam, then reset consistent with any neutralization 
+#
+## --- --- generate initial unneutralized self-field 
+#for s in sp.values():       
+#  s.w0 = 1.
+#  s.w[:] = s.w0*s.pid[:,uzp0pid]/s.uzp
+#
+#fieldsolve() 
+#
+## --- --- unneutralized potential plots 
+#diag_plt_phi_ax(label="Initial Unneutralized Beam Potential at y,x = 0 b,r") 
+#fma()
+#
+#diag_plt_phi_ax(label="Initial Unneutralized Beam Potential at y,x = 0 b,r",xmax=1.5*r_x)
+#fma()
+#
+## --- --- regenerate initial neutralized self-field 
+#adjustments_before_rho() 
+#loadrho() 
+#fieldsolve() 
+#
 
 # Install diagnostic calls after simulation step
 installafterstep(diag_calls)
