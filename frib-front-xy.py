@@ -280,11 +280,18 @@ for s in sp.values():
   s.w   = 1.      # Need full charge: set relative weight to unity 
 
 # Carry out an initial unneutralized field solve with conducting pipe after generate 
-loadrho() 
-fieldsolve() 
+#loadrho() 
+#fieldsolve() 
+
+# Make plot of initial unneutralized beam potential profile 
+         
+#diag_plt_phi_ax(label="Initial Unneutralized Beam Potential at y,x = 0 b,r") 
+#fma()
+
+#diag_plt_phi_ax(label="Initial Unneutralized Beam Potential at y,x = 0 b,r",xmax=1.5*r_x)
+#fma()
 
 # Setup variable weight species needs for neutralization and acceleration 
-
 
 # --- set initial weight factors consistent with neutralization factor 
 #       w0 = initial weight (same for all particles in species) 
@@ -305,16 +312,13 @@ def adjustweights():
     s.w0 = 1.-rho_neut_f(top.zbeam)
     s.w[:] = s.w0*s.pid[:,uzp0pid]/s.uzp
     #  --- scraping aperture 
+    # *** FIX *** add aperture scrape function to load consistently with local aperture spec 
     #top.prwall = ??
 
-# Fix intitial history diagnostics to account for species weight changes
-top.jhist = top.jhist-1   # needed to be minus 1 to reset save in right postion 
-from warp.diagnostics.getzmom import *
-zmmnt() 
-savehist(0.) 
+# Carry out explicit fieldsolve with adjusted rho consistent with neutralization 
+loadrho() 
+fieldsolve()
 
-# Read in diagnostics for slice run 
-execfile("frib-front-xy-diag.py") 
 
 # Modify ion distribution at launch point based on different assumptions on their birth 
 #  in the ECR to reflect a target value of beam canonical angular momentum.  
@@ -325,37 +329,28 @@ if birth_mode == 1 or birth_mode == 2:
 	diag_plt_krot_launch() 
 	diag_plt_krot_v()
 
+# Fix intitial history diagnostics to account for species weight changes
+top.jhist = top.jhist-1   # needed to be minus 1 to reset save in right postion 
+from warp.diagnostics.getzmom import *
+zmmnt() 
+savehist(0.) 
+
+# Read in diagnostics for slice run 
+execfile("frib-front-xy-diag.py") 
+
 # make sure initial diagnostics saved before any steps 
 diag_hist_hl()   
 
-# Make plot of initial unneutralized beam potential profile 
-         
-diag_plt_phi_ax(label="Initial Unneutralized Beam Potential at y,x = 0 b,r") 
-fma()
+# Plot initial Brho by species 
+plt_diag_bro(label = "Initial Rigidity by Species") 
 
-diag_plt_phi_ax(label="Initial Unneutralized Beam Potential at y,x = 0 b,r",xmax=1.5*r_x)
-fma()
-
-# Carry out explicit fieldsolve with adjusted rho consistent with neutralization 
-loadrho() 
-fieldsolve()
-
-
-# Make plot of initial neutralized beam potential profile 
+# Plot initial neutralized beam potential profile 
          
 diag_plt_phi_ax(label="Initial f = %s Neutralized Beam Potential at y,x = 0 b,r"%(neut_f1))
 fma()
 
 diag_plt_phi_ax(label="Initial f = %s Neutralized Beam Potential at y,x = 0 b,r"%(neut_f1),xmax=1.5*r_x)
 fma()
-
-#raise Exception("to here")
-
-
-# Make plot of initial Brho by species 
-plt_diag_bro(label = "Initial Rigidity by Species") 
-
-#raise exception("to here")
 
 
 # Install diagnostic calls after simulation step
@@ -364,11 +359,13 @@ installafterstep(diag_calls)
 # Step 0 diagnostics (if any) of the initial distribution loaded 
 diag_calls() 
 
+#
 # Advance simulation specified steps 
+#
 
+#raise Exception("to here")
 n_step = nint((z_adv-z_launch)/wxy.ds) + 1   # add one step in case of roundoff 
 step(n_step)
-
 
 
 # Make additional history plots for final run if not already called 
