@@ -312,8 +312,7 @@ def adjustweights():
     s.w0 = 1.-rho_neut_f(top.zbeam)
     s.w[:] = s.w0*s.pid[:,uzp0pid]/s.uzp
     #  --- scraping aperture 
-    # *** FIX *** add aperture scrape function to load consistently with local aperture spec 
-    #top.prwall = ??
+    top.prwall = aperture_r(top.zbeam)
 
 # Carry out explicit fieldsolve with adjusted rho consistent with neutralization 
 loadrho() 
