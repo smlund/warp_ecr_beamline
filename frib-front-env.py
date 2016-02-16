@@ -19,6 +19,12 @@ env_ds = 0.005
 #
 CorrectionMode = 1 
 
+
+# Solve Envelope Model using real-time Warp data?
+#   If yes, a separate solution of the envelope model is obtained where real-time
+#   phase space area and kinetic energy are used in the integrator
+integratewarp = 1 # 0: no, 1: yes
+
 # Neutralization mode
 #  neut_mode = 0: same neutralization factor throughout
 #              1: different neutralization factor in different regions
@@ -44,6 +50,12 @@ neut_f    = 0.75
 neut_region_boundaries = [z_begin, neut_z1,  neut_z2, z_end]
 neut_region_factors    = [         0.75, 0., 0.75          ]
 
+# Numerical Integration Control
+
+mxstep = 5000 #
+rtol = 1.49012e-8
+atol = 1.49012e-8
+
 
 #########################
 # End Inputs 
@@ -68,11 +80,28 @@ stepsize = (z_end - z_begin)/(stepnum - 1)
 
 # Data needed in Env. Model
 
-speciesq = append(Operate_charge_states, Support_charge_states)*jperev
+#speciesq = append(Operate_charge_states, Support_charge_states)*jperev
 
-speciesI = append(Operate_ibeam, Support_ibeam)
+#speciesI = append(Operate_ibeam, Support_ibeam)
 
-specieslist = append(Operate_species, Support_species)
+#specieslist = append(Operate_species, Support_species)
+
+
+# Do away with lists 
+
+speciesq = [0]*top.ns
+
+speciesI = [0]*top.ns
+
+specieslist = [0]*top.ns
+
+for ii in sp.keys():
+	  s = sp[ii]
+	  js = s.js
+	  speciesq[js] = s.charge
+	  speciesI[js] = ibeam[ii]
+	  specieslist[js] = sp[ii]
+
 
 
 
@@ -83,8 +112,6 @@ specieslist = append(Operate_species, Support_species)
 # third lot of elements are the dsigmadz
 
 state_vector = [0]*3*top.ns
-
-dct = {}
 
 deltaz = stepsize/2.
 
@@ -134,7 +161,7 @@ def f(state_vector, rrr):
 		speciesbeta.append(sqrt((2*state_vector[i]*jperev)/(specieslist[i].mass*clight**2)))
 		
 	
-	## build first lot in deriv output (i.e. dKEdz)
+## build first lot in deriv output (i.e. dKEdz)
 	
 	for j in range(top.ns):
 		
@@ -147,17 +174,17 @@ def f(state_vector, rrr):
 		if CorrectionMode == 2:
 			derivs.append(speciesq[j]/jperev*(efieldz - state_vector[j+top.ns]**2/4*d2Edz2 + (speciesbeta[j]*clight*hl_pth[0,j]/2 - speciesq[j]*state_vector[j+top.ns]**2*bfieldz/4/specieslist[j].mass)*dBdz) )
 
+#build second lot in deriv output (i.e. dsigmadz)
+
 	for i in range(top.ns):
-		dct["sigma%s" %(i)] = state_vector[i+top.ns]
-		dct["dsigmadz%s" %(i)] = state_vector[i+2*top.ns]
-		derivs.append(state_vector[i+2*top.ns]) #build second lot in deriv output
+		derivs.append(state_vector[i+2*top.ns]) 
 	
 	
 	## Set the neutralization factor
 	
 	neut_ode = get_neut(rrr)
 	
-	## build third lot in deriv output (i.e. sigma'' )
+## build third lot in deriv output (i.e. sigma'' )
 	
 	for j in range(top.ns):
 		
@@ -173,7 +200,7 @@ def f(state_vector, rrr):
 		
 		term3 = ((speciesq[j]*bfieldz)/(2*specieslist[j].mass*speciesbeta[j]*clight))**2*state_vector[j+top.ns]
 
-		emitterm = ((top.hepsr[0,0,j]/2)**2 + (hl_pthn[0,j] /speciesbeta[j])**2) / state_vector[j+top.ns]**3
+		emitterm = ((hl_epsrn[0,j]/speciesbeta[j])**2 + (hl_pthn[0,j] /speciesbeta[j])**2) / state_vector[j+top.ns]**3
 		
 		# top.hepsr equals two times the rms-r-emittance
 		
@@ -189,34 +216,125 @@ def f(state_vector, rrr):
 
 
 # Set up initial states ( dimensions = 3 * number of species, 1st lot KE, 2nd lot sigma-r, 3rd lot sigma-r-prime)
+# Loop over species and fill the elements corresponding to their respective "js" values
+# Must fill the list in the correct order to match other input data
 
-initialstates = []
+initialstates = [0]*3*top.ns
 
+for ii in sp.keys():
+	  s = sp[ii]
+	  js = s.js
 ## Kinetic energy
-
-for i in range(Operate_ns):
-	initialstates.append(Operate_ekin[i])
-	
-for i in range(Support_ns):
-	initialstates.append(Support_ekin[i])
-
+	  initialstates[js] = ekin[ii]
 ## Initial rms-radius
-
-for i in range(top.ns):
-	initialstates.append(sqrt((specieslist[i].a0/2)**2 + (specieslist[i].b0/2)**2))
-
+	  initialstates[js + top.ns] = sqrt((s.a0/2)**2 + (s.b0/2)**2)
 ## Initial envelope angle
-
-for i in range(top.ns):
-	initialstates.append((specieslist[i].a0*specieslist[i].ap0 + specieslist[i].b0*specieslist[i].bp0) / initialstates[i+top.ns])
-
-
+	  initialstates[js + 2*top.ns] = (s.a0*s.ap0 + s.b0*s.bp0) / initialstates[js+top.ns]
 
 
 ## Numerical Solution of the Env. Model
 
-psoln = odeint (f, initialstates, sss, hmax = stepsize, mxstep=5000)
+psoln = odeint (f, initialstates, sss, hmax = stepsize , mxstep= mxstep, atol = atol, rtol = rtol)
 
 
 
 
+
+## Set up function used to integrate the Env. Model using real-time WARP data
+
+from scipy import interpolate
+
+state_vector_2 = [0]*3*top.ns
+
+deltaz = stepsize/2.
+
+zlist = []
+		
+zlist = array([top.hzbeam[kkk] for kkk in range(0, top.jhist+1)])
+
+def fwarp(state_vector_2, rrr):
+	
+	efieldz = getappliedfields(0, 0, rrr)[2][0]
+	bfieldz = getappliedfields(0, 0, rrr)[5][0]
+	
+	dEdz = (getappliedfields(0, 0, rrr + deltaz/2)[2][0] - getappliedfields(0, 0, rrr - deltaz/2)[2][0])/deltaz
+	#dVdz = 0
+	
+	derivs = [0]*top.ns
+	
+	for ii in sp.keys():
+	  s = sp[ii]
+	  js = s.js
+	  derivs[js] = s.charge/jperev*efieldz
+	
+	for i in range(top.ns):
+		derivs.append(state_vector_2[i+2*top.ns]) #build second lot in deriv output
+	
+	speciesbeta = []
+	
+	for i in range(top.ns):
+		speciesbeta.append(sqrt((2*state_vector_2[i]*jperev)/(specieslist[i].mass*clight**2)))
+
+	## Set the neutralization factor
+	
+	neut_ode = get_neut(rrr)
+
+	for j in range(top.ns):
+		
+		scterm = 0
+		
+		emittancelist = []
+		
+		#for kkk in range(len(top.hepsr)):
+			#emittancelist = emittancelist.append(top.hepsr[0,kkk,j])
+		
+		emittancelist = array([hl_epsrn[kkk,j] for kkk in range(0, top.jhist+1)])
+		
+		pthetaLIST = []
+		
+		pthetaLIST = array([hl_pthn[kkk,j] for kkk in range(0, top.jhist+1)])
+		
+		kineticenergylist = []
+		
+		kineticenergylist = array([hl_ekin[kkk,j] for kkk in range(0, top.jhist+1)])
+		
+		emitinter = interpolate.interp1d(zlist, emittancelist, kind='slinear')
+		
+		pthetainter = interpolate.interp1d(zlist, pthetaLIST, kind='slinear')
+		
+		keinter = interpolate.interp1d(zlist, kineticenergylist, kind='slinear')	
+			
+		if rrr <= z_begin:
+			emittance_j = hl_epsrn[0,j]
+			ptheta_j = hl_pthn[0,j]
+			ke_j = hl_ekin[0,j]
+		elif rrr >= z_end:
+			emittance_j = hl_epsrn[top.jhist,j]
+			ptheta_j = hl_pthn[top.jhist,j]
+			ke_j = hl_ekin[top.jhist,j]		
+		else:
+			emittance_j = emitinter(rrr)
+			ptheta_j = pthetainter(rrr)
+			ke_j = keinter(rrr)				
+	
+		for s in range(top.ns):
+			QQQ = (speciesq[j]*speciesI[s])/(2*pi*eps0*specieslist[j].mass*speciesbeta[j]**2*speciesbeta[s]*clight**3)
+			scterm += QQQ*neut_ode*state_vector_2[j+top.ns]/(state_vector_2[j+top.ns]**2 + state_vector_2[s+top.ns]**2)
+		
+		term1 = (speciesq[j]*-efieldz)/(2*state_vector_2[j]*jperev) * state_vector_2[j+2*top.ns]
+		
+		term2 = (speciesq[j]*-dEdz)/(4*state_vector_2[j]*jperev) * state_vector_2[j+top.ns]
+		
+		term3 = ((speciesq[j]*bfieldz)/(2*specieslist[j].mass*speciesbeta[j]*clight))**2*state_vector_2[j+top.ns]
+
+		emitterm = ((emittance_j/speciesbeta[j])**2 + (ptheta_j /speciesbeta[j])**2) / state_vector_2[j+top.ns]**3
+		
+		d2sigmadz2 = term1 + term2 - term3 + scterm + emitterm
+		
+		derivs.append(d2sigmadz2)
+		
+	return derivs
+		
+		
+if integratewarp == 1:
+	psolnwarp = odeint (fwarp, initialstates, sss, hmax = stepsize, mxstep= mxstep, atol = atol, rtol = rtol)
