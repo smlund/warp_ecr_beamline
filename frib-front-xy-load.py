@@ -13,8 +13,6 @@ if birth_mode == 1:
 
 	bz0_launch = getappliedfields(x=0.,y=0.,z=z_launch)[5]      # B_z on-axis at simulation launch location 
 	
-	inj_ang_mom = true
-	
 	sp_krot_launch = {}
 	sp_krot_v      = {} 
 	for ii in sp.keys():
@@ -24,16 +22,48 @@ if birth_mode == 1:
 	  brho  = gamma*s.mass*s.vbeam/s.charge
 	  # --- rms calculation
 	  rms_launch = sqrt(average( (s.xp)**2 + (s.yp)**2 ))
-	  # --- rot wavenumbers at launch and in vacuum v 
-	  krot_launch = (bz0_birth*rms_birth**2/rms_launch**2 - bz0_launch)/(2.*brho)
-	  krot_v      = bz0_birth/(2.*brho)
-	  # 
-	  sp_krot_launch.update({ii:krot_launch})
-	  sp_krot_v.update({ii:krot_v}) 
-	  #
-	  if inj_ang_mom: 
-	    s.uxp -= krot_launch*s.yp*s.uzp
-	    s.uyp += krot_launch*s.xp*s.uzp
+	  # --- rot wavenumbers at launch and in vacuum v
+	  
+	  if ptheta_input == "r_and_B":
+	  
+		  krot_launch = (bz0_birth*rms_birth**2/rms_launch**2 - bz0_launch)/(2.*brho)
+		  krot_v      = bz0_birth/(2.*brho)
+		  # 
+		  sp_krot_launch.update({ii:krot_launch})
+		  sp_krot_v.update({ii:krot_v}) 
+		  #
+		  s.uxp -= krot_launch*s.yp*s.uzp
+		  s.uyp += krot_launch*s.xp*s.uzp
+		  
+	  if ptheta_input == "ptheta_one":
+		  
+		  # bz0_birth*rms_birth**2 of the species whose P_theta is specified:
+		  b_r2_given = ptheta_one_value / sp[ptheta_one_species].charge*2
+		  
+		  b_r2_j = b_r2_given*sp[ptheta_one_species].charge*sp[ptheta_one_species].mass/s.charge/s.mass
+		  
+		  krot_launch = (b_r2_j/rms_launch**2 - bz0_launch)/(2.*brho)
+		  krot_v      = bz0_birth/(2.*brho)
+		  # 
+		  sp_krot_launch.update({ii:krot_launch})
+		  sp_krot_v.update({ii:krot_v}) 
+		  #
+		  s.uxp -= krot_launch*s.yp*s.uzp
+		  s.uyp += krot_launch*s.xp*s.uzp
+		  
+	  if ptheta_input == "ptheta_all":
+		  
+		  # bz0_birth*rms_birth**2 of the species under question:
+		  b_r2_j = pthetabeam[ii] / s.charge*2
+		  
+		  krot_launch = (b_r2_j/rms_launch**2 - bz0_launch)/(2.*brho)
+		  krot_v      = bz0_birth/(2.*brho)
+		  # 
+		  sp_krot_launch.update({ii:krot_launch})
+		  sp_krot_v.update({ii:krot_v}) 
+		  #
+		  s.uxp -= krot_launch*s.yp*s.uzp
+		  s.uyp += krot_launch*s.xp*s.uzp
 
 
 # Function that locates the two peaks in the ECR B-field and extracts information in-between
