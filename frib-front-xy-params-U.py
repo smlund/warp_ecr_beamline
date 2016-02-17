@@ -228,10 +228,10 @@ ryp = {key: 0. for key in sp.keys()}
 #              3: Assume ions are born randomly between two peaks in the ECR B-field. 
 #                 Therefore, each ion is born at a different B-field
 #
-#  * Angular velocities are injected to the ions to conserve the 
+#  * Angular velocities are added to the ions to conserve the linear approx 
 #    statistical canonical angular momentum of the beam in method 2 & 3.  This only 
-#    takes into account the solenoidal compoenent of the ECR field. The algorithm assumes
-#    that the beam size within the ECR is the same as the that at launch
+#    takes into account the solenoidal component of the ECR field. The algorithm assumes
+#    that the beam size within the ECR is the same as at launch.
 
 birth_mode = 2
 
@@ -290,6 +290,8 @@ pthetabeam = {
 
 ## Reference: rms_launch = 2.8 mm, bz0_launch = 2.15 T
 ##            if beam is born at launch point, normalized <P_theta>_U33 = 0.384 mm-mrad
+
+
 
 #
 # Define transverse simulation grid and properties of self-field solver 
