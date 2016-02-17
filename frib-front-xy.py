@@ -281,8 +281,10 @@ checksymmetry()
 # --- set initial weight factors consistent with neutralization factor 
 #       w0 = initial weight (same for all particles in species) 
 #       species.w = array of variable weight factors 
-for s in sp.values():       
-  s.w0  = 1.-rho_neut_f(top.zbeam)
+for sp_name in sp.keys():
+  s = sp[sp_name]
+  #       
+  s.w0  = 1.-rho_neut_f(top.zbeam,sp_name)
   s.sw0    = s.sw       # save initial sw    (in case later changed)  
   s.vbeam0 = s.vbeam    # save initial vbeam (in case later changed)  
 
@@ -293,9 +295,10 @@ top.pgroup.pid[:,uzp0pid] = top.pgroup.uzp
 #       Species weights and particle scrape aperture   
 @callfrombeforeloadrho
 def adjustments_before_rho():
-  for s in sp.values():
+  for sp_name in sp.keys():
+    s = sp[sp_name]
     # --- Adjust species weights 
-    s.w0 = 1.-rho_neut_f(top.zbeam)
+    s.w0 = 1.-rho_neut_f(top.zbeam,sp_name)
     s.w[:] = s.w0*s.pid[:,uzp0pid]/s.uzp
     #  --- Scraping scraping aperture:
     #       Set for efficient removal of out of bounds particles. 
@@ -337,10 +340,10 @@ plt_diag_bro(label = "Initial Rigidity by Species")
 # --- neutralized 
 #       Using setup fields including neutralization 
 
-diag_plt_phi_ax(label="Initial f = %s Neutralized Beam Potential at y,x = 0 b,r"%(rho_neut_f(top.zbeam)))
+diag_plt_phi_ax(label="Initial Neutralized Beam Potential at y,x = 0 b,r")
 fma()
 
-diag_plt_phi_ax(label="Initial f = %s Neutralized Beam Potential at y,x = 0 b,r"%(rho_neut_f(top.zbeam)),xmax=1.5*r_x)
+diag_plt_phi_ax(label="Initial Neutralized Beam Potential at y,x = 0 b,r",xmax=1.5*r_x)
 fma()
 
 # *** Code below did not work.  Appear to get same plots as unneutralized case.  Error?  Must be triggering weight 
