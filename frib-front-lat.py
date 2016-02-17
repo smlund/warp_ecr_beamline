@@ -289,8 +289,11 @@ else:
 
 # Neutralization specifications 
 #
-#    Define neutralization fraction function rho_neut_f(z) that returns the neutralization fraction 
-#    based on axial location z within the lattice. Values of rho_neut_f() are set by arrays:
+#    Define neutralization fraction function 
+#       rho_neut_f(z,s) 
+#    that returns the neutralization fraction based on axial location z within the lattice for the named 
+#    species "s". Values of rho_neut_f() are set by dictionary named arrays specified 
+#    by species with:
 #      
 #       neut_z    = []   Break points in lattice with neutralization fraction [m]
 #       neut_frac = []   Neutralization fraction to the right of corresponding break point: 
@@ -317,13 +320,15 @@ array(
  0.75
 ]    )
 
+sp_neut_z    = {key: neut_z    for key in sp.keys()}
+sp_neut_frac = {key: neut_frac for key in sp.keys()}
 
-def rho_neut_f(z):
+def rho_neut_f(z,s):
   # --- Find index giving location in neutralization fraction array 
-  index = sum(where(z/neut_z >= 1., 1, 0)) - 1  
+  index = sum(where(z/sp_neut_z[s] >= 1., 1, 0)) - 1  
   if index < 0: index = 0 
   # --- Return neutralization fraction with no error checking to allow flexability
-  f = neut_frac[index] 
+  f = sp_neut_frac[s][index] 
   return(f) 
   
 
