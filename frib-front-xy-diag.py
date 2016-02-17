@@ -366,7 +366,7 @@ def diag_hist_hl():
     #           * Envelope model Q_js can be obtained from Q_j and line charges lambda_j: no need to save 
     hl_Qperv[top.jhist,js] = s.charge*(s.charge/echarge)*hl_lambda_p[top.jhist,js]/(2.*pi*eps0*s.mass*vbeam**2)
     # --- Ion rho electron neutralization factor [1] = No space-charge, [0] full space-charge 
-    hl_neutf[top.jhist,js] = rho_neut_f(top.zbeam) 
+    hl_neutf[top.jhist,js] = rho_neut_f(top.zbeam,ii) 
     # --- Rotation wavenumber 
     hl_krot[top.jhist,js] = hl_lz[top.jhist,js]/dvnz(avg_rsq)
     # --- Larmor Rotation angle: integrate from previous step  
