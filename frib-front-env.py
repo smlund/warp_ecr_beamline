@@ -1,6 +1,8 @@
 # Axisymmetric envelope model solution.
 #   * Designed to use in a variety of simulations with inputs set accordingly. 
-#   * Setup below for use in front end simulation script frib-front-xy.py 
+#   * Setup below for use in front end simulation script frib-front-xy.py
+#   * Separate diagnostic scripts in frib-front-env-diag.py used to make 
+#     diagnostic plots of the solution.   
 
 #########################
 # Begin Inputs 
@@ -26,11 +28,11 @@ CorrectionMode = 1
 
 
 # Solve Envelope Model using Warp simulation data 
-#   integratewarp = 1 yes: Use pic data for all z in integration range for energy, ps areas 
-#                 = 0 no : Use pic data at z_begin only  
+#   integratewarp = True  : Use pic data for all z in integration range for energy, ps areas 
+#                 = False : Use pic data at z_begin only  
 #   * Case 1 also generates case 0 solution 
 
-integratewarp = 1
+integratewarp = True 
 
 # Neutralization mode
 #  neut_mode = 0: same neutralization factor throughout
@@ -103,13 +105,17 @@ for ii in sp.keys():
   specieslist[js] = sp[ii]
 
 
-# state vector, for a total of n species
-# ordering: same as rest of the code, U then O
-# first lot of n elements are KE of the respective species
-# second lot of n elements are the sigma
-# third lot of elements are the dsigmadz
-
-state_vector = [0]*3*top.ns
+# Form state vector to advance
+#   Length 3*ns where ns is the total of species
+# 
+#   1st ns block: KE of species
+#   2nd ns block: sigma_r  of species 
+#   3rd ns block: d(sigma_r)/dz of species
+# 
+# * Same ordering used in rest of code 
+ 
+#state_vector = [0]*3*top.ns
+state_vector = zeros(3*top.ns) 
 
 deltaz = stepsize/2.
 
@@ -213,11 +219,13 @@ def f(state_vector, rrr):
 
 
 
-# Set up initial states ( dimensions = 3 * number of species, 1st lot KE, 2nd lot sigma-r, 3rd lot sigma-r-prime)
-# Loop over species and fill the elements corresponding to their respective "js" values
-# Must fill the list in the correct order to match other input data
+# Set up initial states 
+#  * Loop over species and fill the elements corresponding to 
+#    their respective "js" values
+#  * Must fill the list in the correct order to match other input data
 
-initialstates = [0]*3*top.ns
+#initialstates = [0]*3*top.ns
+initialstates = zeros(3*top.ns) 
 
 for ii in sp.keys():
 	  s = sp[ii]
@@ -242,7 +250,8 @@ psoln = odeint (f, initialstates, sss, hmax = stepsize , mxstep= mxstep, atol = 
 
 from scipy import interpolate
 
-state_vector_2 = [0]*3*top.ns
+#state_vector_2 = [0]*3*top.ns
+state_vector_2 = zeros(3*top.ns)
 
 deltaz = stepsize/2.
 
