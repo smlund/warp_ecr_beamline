@@ -1,41 +1,51 @@
+# Diagnostics for axisymmetric envelope model solution.   
+#   * Designed to use in a variety of simulations with inputs set accordingly. 
+#   * Setup below for use in front end simulation script frib-front-xy.py .
+#   * Assumes that  frib-front-env.py is executed to generate envelope model 
+#     solution.  
 
-# plot envelopes of the two species with highest and lowest rigidities
-# 0: false, 1: true
+##############################################################################
+# Begin Inputs 
+##############################################################################
 
-plot_extreme_brho = 1 
+# Plot envelopes of species with highest and lowest rigidities
 
-# The following diagnostic functions make the respective plots for a particular species
+plot_extreme_brho = True 
 
-# envelope: plot the envelope from both Warp and the Env. Model
-# env_terms: plot the terms in the Envelope Equation as calculated by the Env. Model
-# warp_terms: plot the terms in the Envelope Equation as calculated by WARP
-# env_vs_warp: a series of 5 plots, each ploting the same term from both the Env. Model and WARP
-# terms_diff: plot the difference between the Env. Model terms and the WARP terms
-# ke_diff: plot the difference in KE between the Env. Model and WARP
+# Plot diagnostics by named species 
+# 
+# species_ 
+#         envelope:    Envelope model (dashed) and Warp (solid)  
+#         env_terms:   Terms in the envelope equation as calculated by the Env. Model
+#         warp_terms:  Terms in the envelope equation as calculated by Warp
+#         env_vs_warp: 5 plots, contrasting terms envelope equation from env model and Warp 
+#         terms_diff:  Difference between terms in env_vs_warp  
+#         ke_diff:     Difference in kinetic energy between the envelope model and Warp
+#
+#  * Each control variable is a list that can be set to a list of named species desired 
+#  * "all"  makes plots for all species 
+#  " "none" skips plot 
 
-# lists specifying the species (by name) to which each function should be applied
-
-species_envelope = ["all"]  # use "all" to plot every species or specify the desired species
-
-species_env_terms = ["U33"]
-
-species_warp_terms = ["U33"]
-
+species_envelope    = ["all"]
+species_env_terms   = ["U33"]
+species_warp_terms  = ["U33"]
 species_env_vs_warp = ["U33"]
-
-species_terms_diff = ["U33"]
-
-species_ke_diff = ["U33", "U34"]
+species_terms_diff  = ["U33"]
+species_ke_diff     = ["U33", "U34"]
 
 
+##############################################################################
+# End Inputs 
+##############################################################################
 
 
-
-
-
-
-
-## Compute the terms in the Env. Model using real-time WARP data
+# Compute the terms in the envelope equation using history data from Warp simulation rather 
+# than advancing the ODE. 
+# 
+#  term1    = ?
+#  term2    = ?
+#  term3    = ? 
+#  emitterm = ? 
 
 termdatawarp = []
 
