@@ -308,7 +308,7 @@ w3d.l4symtry = false     # 4-fold symmetry
 #     if symmetry operations are set.  
 
 r_grid = 8.*cm    # radial extent of grid 
-n_grid = 4      # number grid cells (no symmetries) 
+n_grid = 400      # number grid cells (no symmetries) 
 
 
 #
