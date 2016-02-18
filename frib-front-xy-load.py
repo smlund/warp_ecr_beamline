@@ -23,48 +23,46 @@ if birth_mode == 1:
 	  # --- rms calculation
 	  rms_launch = sqrt(average( (s.xp)**2 + (s.yp)**2 ))
 	  # --- rot wavenumbers at launch and in vacuum v
+		  
+	  # bz0_birth*rms_birth**2 of the species under question:
+	  b_r2_j = pthetabeam[ii] / s.charge*2*s.mass*clight
 	  
-	  if ptheta_input == "r_and_B":
-	  
-		  krot_launch = (bz0_birth*rms_birth**2/rms_launch**2 - bz0_launch)/(2.*brho)
-		  krot_v      = bz0_birth/(2.*brho)
-		  # 
-		  sp_krot_launch.update({ii:krot_launch})
-		  sp_krot_v.update({ii:krot_v}) 
-		  #
-		  s.uxp -= krot_launch*s.yp*s.uzp
-		  s.uyp += krot_launch*s.xp*s.uzp
-		  
-	  if ptheta_input == "ptheta_one":
-		  
-		  # bz0_birth*rms_birth**2 of the species whose P_theta is specified:
-		  b_r2_given = ptheta_one_value / sp[ptheta_one_species].charge*2
-		  
-		  b_r2_j = b_r2_given*sp[ptheta_one_species].charge*sp[ptheta_one_species].mass/s.charge/s.mass
-		  
-		  krot_launch = (b_r2_j/rms_launch**2 - bz0_launch)/(2.*brho)
-		  krot_v      = bz0_birth/(2.*brho)
-		  # 
-		  sp_krot_launch.update({ii:krot_launch})
-		  sp_krot_v.update({ii:krot_v}) 
-		  #
-		  s.uxp -= krot_launch*s.yp*s.uzp
-		  s.uyp += krot_launch*s.xp*s.uzp
-		  
-	  if ptheta_input == "ptheta_all":
-		  
-		  # bz0_birth*rms_birth**2 of the species under question:
-		  b_r2_j = pthetabeam[ii] / s.charge*2
-		  
-		  krot_launch = (b_r2_j/rms_launch**2 - bz0_launch)/(2.*brho)
-		  krot_v      = bz0_birth/(2.*brho)
-		  # 
-		  sp_krot_launch.update({ii:krot_launch})
-		  sp_krot_v.update({ii:krot_v}) 
-		  #
-		  s.uxp -= krot_launch*s.yp*s.uzp
-		  s.uyp += krot_launch*s.xp*s.uzp
+	  krot_launch = (b_r2_j/rms_launch**2 - bz0_launch)/(2.*brho)
+	  krot_v      = bz0_birth/(2.*brho)
+	  # 
+	  sp_krot_launch.update({ii:krot_launch})
+	  sp_krot_v.update({ii:krot_v}) 
+	  #
+	  s.uxp -= krot_launch*s.yp*s.uzp
+	  s.uyp += krot_launch*s.xp*s.uzp
 
+
+# Beam loading for the 2nd birth mode
+
+if birth_mode == 2:
+
+	bz0_launch = getappliedfields(x=0.,y=0.,z=z_launch)[5]      # B_z on-axis at simulation launch location 
+	
+	sp_krot_launch = {}
+	sp_krot_v      = {} 
+	for ii in sp.keys():
+	  s = sp[ii]
+	  # --- rigidity 
+	  gamma = 1./sqrt(1.-(s.vbeam/clight)**2)
+	  brho  = gamma*s.mass*s.vbeam/s.charge
+	  # --- rms calculation
+	  rms_launch = sqrt(average( (s.xp)**2 + (s.yp)**2 ))
+	  # --- rot wavenumbers at launch and in vacuum v
+	  
+	  krot_launch = (bz0_birth*rms_birth**2/rms_launch**2 - bz0_launch)/(2.*brho)
+	  krot_v      = bz0_birth/(2.*brho)
+	  # 
+	  sp_krot_launch.update({ii:krot_launch})
+	  sp_krot_v.update({ii:krot_v}) 
+	  #
+	  s.uxp -= krot_launch*s.yp*s.uzp
+	  s.uyp += krot_launch*s.xp*s.uzp
+		 
 
 # Function that locates the two peaks in the ECR B-field and extracts information in-between
 # input: starting position of the ECR B-field data
@@ -116,37 +114,6 @@ def field_two_peak(ecr_zmin):
 	return [cumulativefield / stepcounter, stepcounter*step_size , peak1, peak2, trough]
 
 bfieldinfo = field_two_peak(ecr_zmmin)
-
-
-
-# Beam loading for the 2nd birth mode
-
-if birth_mode == 2:
-	bz0_birth   = bfieldinfo[0]    # B_z on-axis at ECR extraction plane
-	bz0_launch = getappliedfields(x=0.,y=0.,z=z_launch)[5]      # B_z on-axis at simulation launch location 
-	
-	inj_ang_mom = true
-	
-	sp_krot_launch = {}
-	sp_krot_v      = {} 
-	for ii in sp.keys():
-	  s = sp[ii]
-	  # --- rigidity 
-	  gamma = 1./sqrt(1.-(s.vbeam/clight)**2)
-	  brho  = gamma*s.mass*s.vbeam/s.charge
-	  # --- rms calculation
-	  rms_launch = sqrt(average( (s.xp)**2 + (s.yp)**2 ))
-	  rms_birth   = sqrt( (s.a0/2.)**2 + (s.b0/2.)**2 )
-	  # --- rot wavenumbers at launch and in vacuum v 
-	  krot_launch = (bz0_birth*rms_birth**2/rms_launch**2 - bz0_launch)/(2.*brho)
-	  krot_v      = bz0_birth/(2.*brho)
-	  # 
-	  sp_krot_launch.update({ii:krot_launch})
-	  sp_krot_v.update({ii:krot_v}) 
-	  #
-	  if inj_ang_mom: 
-	    s.uxp -= krot_launch*s.yp*s.uzp
-	    s.uyp += krot_launch*s.xp*s.uzp
 
 
 # Beam loading for the 3rd birth mode
