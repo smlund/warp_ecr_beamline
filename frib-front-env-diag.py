@@ -70,7 +70,11 @@ for iii in range(0, top.jhist+1):
 	
 	## Set the neutralization factor
 	
-	neut_ode = get_neut(zzz)
+	species_neut_f   = zeros(top.ns)
+	
+	for ii in sp.keys():
+	  js = sp[ii].js
+	  species_neut_f[js] = rho_neut_f(zzz,ii)
 	
 	for j in range(top.ns):
 				
@@ -78,7 +82,7 @@ for iii in range(0, top.jhist+1):
 		
 		for s in range(top.ns):
 			QQQ = (speciesq[j]*speciesI[s])/(2*pi*eps0*specieslist[j].mass*speciesbeta[j]**2*speciesbeta[s]*clight**3)
-			scterm += QQQ*neut_ode*xyz[j+top.ns]/(xyz[j+top.ns]**2 + xyz[s+top.ns]**2)
+			scterm += QQQ*(1-species_neut_f[s])*xyz[j+top.ns]/(xyz[j+top.ns]**2 + xyz[s+top.ns]**2)
 		
 		term1 = (speciesq[j]*-efieldz)/(2*xyz[j]*jperev) * xyz[j+2*top.ns]
 		
