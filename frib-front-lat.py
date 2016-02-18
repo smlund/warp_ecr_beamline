@@ -330,19 +330,6 @@ def rho_neut_f(z,s):
   # --- Return neutralization fraction with no error checking to allow flexability
   f = neut_frac[s][index] 
   return(f) 
-  
-
-# *** DELETE BEGIN  Below after envelope code cleaned up to use new neutralization function ***
-#  Break points z1 and z2 correspond to z values where neutralization is turned off and then 
-#    back on so the beam is unneutralized in the grated acceleration gap.  
-
-neut_z1 = gag_zc - 20.90*cm    # z of neutralization stop post injector before grated gap: set via 1% of gap E_z field reached  
-neut_z2 = gag_zc + 22.28*cm  
-
-neut_f1 = 0.75                 # corresponding electron neutralization factors 
-neut_f2 = 0.75  
-
-# *** DELETE END *** 
 
 
 # Aperture specfications 
