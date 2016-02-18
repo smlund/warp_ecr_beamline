@@ -34,30 +34,6 @@ CorrectionMode = 1
 
 integratewarp = True 
 
-# Neutralization mode
-#  neut_mode = 0: same neutralization factor throughout
-#              1: different neutralization factor in different regions
-#
-#  neut_mode = 0:
-#    neut_f = neutralization factor 
-#  neut_mode = 1:
-#   neut_region_boundaries = array of z locations to use neutralization factors
-#   neut_region_factors    = array of neutralization factors to apply within 
-#                              specified boundaries. 
-#      Ex:  If 0.1 neutralization for 0 < z < 0.5 
-#           and 0.9 neutralization for 0.5 < z < 1:
-#            neut_region_boundaries = [0., 0.5, 1.]
-#            neut_region_factors = [0.1, 0.9]
-#
-#   * neut_mode = 0, neut_f = 0 means no neutralization 
-#   * neut_mode = 0, neut_f = 1 means full neutralization
-
-neut_mode = 1
-
-neut_f    = 0.75 
-
-neut_region_boundaries = [env_zs, neut_z1,  neut_z2, env_ze]
-neut_region_factors    = [         0.75, 0., 0.75          ]
 
 # Numerical Integration Control
 #
@@ -76,11 +52,6 @@ atol = 1.49012e-8
 
 # Import ode solver 
 from scipy.integrate import odeint
-
-# make sure that len(neut_region_boundaries) = len(neut_region_factors) + 1
-if neut_mode == 1:
-	if len(neut_region_boundaries) != len(neut_region_factors) + 1:
-		raise exception("faulty neutralization region setup")
 
 # Make time array for solution based on advance range and step size
 
@@ -122,28 +93,6 @@ deltaz = stepsize/2.
 termdata = []
 
 
-# function that returns the neutralization factor at a given position
-
-def get_neut(zz):
-	if neut_mode == 0:
-		neut_factor = 1 - neut_f
-		
-	if neut_mode == 1:
-		for i in range(len(neut_region_factors)):
-			if zz >= neut_region_boundaries[i]:
-				if zz <= neut_region_boundaries[i+1]:
-					neut_factor = 1 - neut_region_factors[i]
-					break
-		if zz < neut_region_boundaries[0]:
-			neut_factor = 1 - neut_region_factors[0]
-		if zz > neut_region_boundaries[len(neut_region_factors)]:
-			neut_factor = 1 - neut_region_factors[len(neut_region_factors)-1]
-	
-	return neut_factor
-
-
-
-
 ## Set up the derivative of the state vector
 
 def f(state_vector, rrr):
@@ -178,25 +127,28 @@ def f(state_vector, rrr):
 		if CorrectionMode == 2:
 			derivs.append(speciesq[j]/jperev*(efieldz - state_vector[j+top.ns]**2/4*d2Edz2 + (speciesbeta[j]*clight*hl_pth[0,j]/2 - speciesq[j]*state_vector[j+top.ns]**2*bfieldz/4/specieslist[j].mass)*dBdz) )
 
-#build second lot in deriv output (i.e. dsigmadz)
+## build second lot in deriv output (i.e. dsigmadz)
 
 	for i in range(top.ns):
 		derivs.append(state_vector[i+2*top.ns]) 
 	
-	
-	## Set the neutralization factor
-	
-	neut_ode = get_neut(rrr)
-	
 ## build third lot in deriv output (i.e. sigma'' )
+
+	# generate list of neutralization factors
 	
+	species_neut_f   = zeros(top.ns)
+	
+	for ii in sp.keys():
+	  js = sp[ii].js
+	  species_neut_f[js] = rho_neut_f(rrr,ii)
+
 	for j in range(top.ns):
 		
 		scterm = 0
 		
 		for s in range(top.ns):
 			QQQ = (speciesq[j]*speciesI[s])/(2*pi*eps0*specieslist[j].mass*speciesbeta[j]**2*speciesbeta[s]*clight**3)
-			scterm += QQQ*neut_ode*state_vector[j+top.ns]/(state_vector[j+top.ns]**2 + state_vector[s+top.ns]**2)
+			scterm += QQQ*(1-species_neut_f[s])*state_vector[j+top.ns]/(state_vector[j+top.ns]**2 + state_vector[s+top.ns]**2)
 		
 		term1 = (speciesq[j]*-efieldz)/(2*state_vector[j]*jperev) * state_vector[j+2*top.ns]
 		
@@ -282,9 +234,13 @@ def fwarp(state_vector_2, rrr):
 	for i in range(top.ns):
 		speciesbeta.append(sqrt((2*state_vector_2[i]*jperev)/(specieslist[i].mass*clight**2)))
 
-	## Set the neutralization factor
+	# generate list of neutralization factors
 	
-	neut_ode = get_neut(rrr)
+	species_neut_f   = zeros(top.ns)
+	
+	for ii in sp.keys():
+	  js = sp[ii].js
+	  species_neut_f[js] = rho_neut_f(rrr,ii)
 
 	for j in range(top.ns):
 		
@@ -326,7 +282,7 @@ def fwarp(state_vector_2, rrr):
 	
 		for s in range(top.ns):
 			QQQ = (speciesq[j]*speciesI[s])/(2*pi*eps0*specieslist[j].mass*speciesbeta[j]**2*speciesbeta[s]*clight**3)
-			scterm += QQQ*neut_ode*state_vector_2[j+top.ns]/(state_vector_2[j+top.ns]**2 + state_vector_2[s+top.ns]**2)
+			scterm += QQQ*(1-species_neut_f[s])*state_vector_2[j+top.ns]/(state_vector_2[j+top.ns]**2 + state_vector_2[s+top.ns]**2)
 		
 		term1 = (speciesq[j]*-efieldz)/(2*state_vector_2[j]*jperev) * state_vector_2[j+2*top.ns]
 		
