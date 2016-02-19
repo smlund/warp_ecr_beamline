@@ -31,7 +31,7 @@ ecr_sc     = 1.0                    # scale factor to muliply field data by
 ecr_typ    = "lin"                  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field  
 
 # --- linear element data  
-fi = PRpickle.PR("lat_ecr_venus.lin.20140602.pkl")
+fi = PRpickle.PR("lat_ecr_venus.lin.20160218.pkl")
 ecr_bz_extr = fi.ecr_venus_bz_extr
 ecr_dz = fi.ecr_venus_dz 
 ecr_nz = fi.ecr_venus_nz  
