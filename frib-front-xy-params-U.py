@@ -229,7 +229,7 @@ ryp = {key: 0. for key in sp.keys()}
 #                     from being born at different magnetic field values within the ECR ion source.  
 #              1: Ions born with statistical canonical angular momentum specified by species 
 #                 with values set by a species dictionary: 
-#                        pthetabeam = {key: value} value = <P_theta>/(m*c) [m-rad] 
+#                        ptheta = {key: value} value = <P_theta>/(m*c) [m-rad] 
 #                   * Allows detailed tuning of distribution.
 #              2: Ions born consistent with a specified field value and rms beam size.  
 #                   * Allows adjusting <P_theta> consistent with beam being born a specified size 
@@ -251,12 +251,12 @@ ryp = {key: 0. for key in sp.keys()}
 #    gives <P_theta>/(m*c) = 0.384 mm-mrad for U33 with the present setup.  
 
 
-birth_mode = 1   # reminder: birth_mode 1 & 2 requries user input below
+birth_mode = 2   # reminder: birth_mode 1 & 2 requries user input below
 
 
 ## -- Input for birth_mode == 1
 
-pthetabeam = {  # Values below are rounded numbers obtained from birth_mode = 2 
+ptheta = {  # Values below are rounded numbers obtained from birth_mode = 2 
 'U25': 0.23*mm*mr,
 'U26': 0.23*mm*mr,
 'U27': 0.24*mm*mr,
@@ -282,9 +282,9 @@ pthetabeam = {  # Values below are rounded numbers obtained from birth_mode = 2
 
 ## -- Input for birth_mode == 2
 
-rms_birth = r_extractor/2.*sqrt(2.)   # Same birth radius as source aperture size 
-                                      # (factor 2. due to rms x equiv, sqrt(2.) due to rms r not rms x)
-bz0_birth = 1.67              	# Average field between Venus ECR peaks   
+rms_birth = sqrt(2.)*(r_extractor/2.)   # Same birth radius as source aperture size 
+                                        # (factor 2. due to rms x equiv, sqrt(2.) due to rms r not rms x)
+bz0_birth = 1.67                        # Average field between Venus ECR peaks   
 
 
 #
