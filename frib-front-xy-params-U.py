@@ -235,8 +235,14 @@ ryp = {key: 0. for key in sp.keys()}
 #                   * Allows adjusting <P_theta> consistent with beam being born a specified size 
 #                     in a specified magnetic field.  
 #                        rms_birth = sqrt(<r^2>) at birth [m]
-#                        bz0_birth = B_z(r=0) at birth [Tesla]                       
-#              3: Ions are born randomly between two peaks in the ECR ion source B-field. 
+#                        bz0_birth = B_z(r=0) at birth [Tesla]
+#              3: Same princples as birth_mode = 2 except the field values and rms beam sizes at birth
+#                 are specified species by species   
+#                   * Allows adjusting <P_theta> consistent with beam being born a specified size 
+#                     in a specified magnetic field.  
+#                        rms_r_at_birth = {key: value} value = sqrt(<r^2>) at birth [m]
+#                        bz0_at_birth = {key: value} value = B_z(r=0) at birth [Tesla]                     
+#              4: Ions are born randomly between two peaks in the ECR ion source B-field. 
 #                   * Each ion is born at a different B-field using a uniform spatial
 #                     distribution between peaks of ECR field. 
 #
@@ -251,7 +257,7 @@ ryp = {key: 0. for key in sp.keys()}
 #    gives <P_theta>/(m*c) = 0.384 mm-mrad for U33 with the present setup.  
 
 
-birth_mode = 2   # reminder: birth_mode 1 & 2 requries user input below
+birth_mode = 2   # reminder: birth_mode 1, 2 & 3 requries user input below
 
 
 ## -- Input for birth_mode == 1
@@ -284,7 +290,56 @@ ptheta = {  # Values below are rounded numbers obtained from birth_mode = 2
 
 rms_birth = sqrt(2.)*(r_extractor/2.)   # Same birth radius as source aperture size 
                                         # (factor 2. due to rms x equiv, sqrt(2.) due to rms r not rms x)
-bz0_birth = 1.67                        # Average field between Venus ECR peaks   
+bz0_birth = 1.67                        # Default value 1.67 T is the average field between Venus ECR peaks   
+
+
+## -- Input for birth_mode == 3
+
+beam_rms_birth = {  # Default value 2.82 mm equals sqrt(2.)*(r_extractor/2.)
+'U25': 2.82*mm,
+'U26': 2.82*mm,
+'U27': 2.82*mm,
+'U28': 2.82*mm,
+'U29': 2.82*mm,
+'U30': 2.82*mm,
+'U31': 2.82*mm,
+'U32': 2.82*mm,
+'U33': 2.82*mm,
+'U34': 2.82*mm,
+'U35': 2.82*mm,
+'U36': 2.82*mm,
+'U37': 2.82*mm,
+'U38': 2.82*mm,
+'U39': 2.82*mm,
+'U40': 2.82*mm,
+'O1': 2.82*mm,
+'O2': 2.82*mm,
+'O3': 2.82*mm,
+'O4': 2.82*mm,
+         }
+         
+beam_bz0_birth = {  # [Tesla], default value 1.67 T is the average field between Venus ECR peaks 
+'U25': 1.67,
+'U26': 1.67,
+'U27': 1.67,
+'U28': 1.67,
+'U29': 1.67,
+'U30': 1.67,
+'U31': 1.67,
+'U32': 1.67,
+'U33': 1.67,
+'U34': 1.67,
+'U35': 1.67,
+'U36': 1.67,
+'U37': 1.67,
+'U38': 1.67,
+'U39': 1.67,
+'U40': 1.67,
+'O1': 1.67,
+'O2': 1.67,
+'O3': 1.67,
+'O4': 1.67,
+         }
 
 
 #
