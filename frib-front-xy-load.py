@@ -25,7 +25,7 @@ if birth_mode == 1:
 	  # --- rot wavenumbers at launch and in vacuum v
 		  
 	  # bz0_birth*rms_birth**2 of the species under question:
-	  b_r2_j = pthetabeam[ii] / s.charge*2*s.mass*clight
+	  b_r2_j = ptheta[ii] / s.charge*2*s.mass*clight
 	  
 	  krot_launch = (b_r2_j/rms_launch**2 - bz0_launch)/(2.*brho)
 	  krot_v      = bz0_birth/(2.*brho)
