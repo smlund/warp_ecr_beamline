@@ -54,8 +54,8 @@ if birth_mode == 2:
 	  rms_launch = sqrt(average( (s.xp)**2 + (s.yp)**2 ))
 	  # --- rot wavenumbers at launch and in vacuum v
 	  
-	  krot_launch = (beam_bz0_birth[ii]*beam_rms_birth[ii]**2/rms_launch**2 - bz0_launch)/(2.*brho)
-	  krot_v      = beam_bz0_birth[ii]/(2.*brho)
+	  krot_launch = (bz0_birth[ii]*rms_birth[ii]**2/rms_launch**2 - bz0_launch)/(2.*brho)
+	  krot_v      = bz0_birth[ii]/(2.*brho)
 	  # 
 	  sp_krot_launch.update({ii:krot_launch})
 	  sp_krot_v.update({ii:krot_v}) 
