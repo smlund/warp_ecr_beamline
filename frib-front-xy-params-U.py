@@ -282,52 +282,56 @@ ptheta = {  # Values below are rounded numbers obtained from default values of b
 
 ## -- Input for birth_mode == 2
 
-beam_rms_birth = {  # Same birth radius as source aperture size
-                    # Default value 2.82 mm equals sqrt(2.)*(r_extractor/2.)
-                    # (factor 2. due to rms x equiv, sqrt(2.) due to rms r not rms x)
-'U25': 2.82*mm,
-'U26': 2.82*mm,
-'U27': 2.82*mm,
-'U28': 2.82*mm,
-'U29': 2.82*mm,
-'U30': 2.82*mm,
-'U31': 2.82*mm,
-'U32': 2.82*mm,
-'U33': 2.82*mm,
-'U34': 2.82*mm,
-'U35': 2.82*mm,
-'U36': 2.82*mm,
-'U37': 2.82*mm,
-'U38': 2.82*mm,
-'U39': 2.82*mm,
-'U40': 2.82*mm,
-'O1': 2.82*mm,
-'O2': 2.82*mm,
-'O3': 2.82*mm,
-'O4': 2.82*mm,
+rms_birth_i = 2.82*mm  # Same birth radius as source aperture size
+                       #  2.82 mm = sqrt(2.)*(r_extractor/2.)
+                       # (factor 2. due to rms x equiv, sqrt(2.) due to rms r not rms x)
+
+rms_birth = {  
+'U25': rms_birth_i,
+'U26': rms_birth_i,
+'U27': rms_birth_i,
+'U28': rms_birth_i,
+'U29': rms_birth_i,
+'U30': rms_birth_i,
+'U31': rms_birth_i,
+'U32': rms_birth_i,
+'U33': rms_birth_i,
+'U34': rms_birth_i,
+'U35': rms_birth_i,
+'U36': rms_birth_i,
+'U37': rms_birth_i,
+'U38': rms_birth_i,
+'U39': rms_birth_i,
+'U40': rms_birth_i,
+'O1': rms_birth_i,
+'O2': rms_birth_i,
+'O3': rms_birth_i,
+'O4': rms_birth_i
          }
          
-beam_bz0_birth = {  # [Tesla], default value 1.67 T is the average field between Venus ECR peaks 
-'U25': 1.67,
-'U26': 1.67,
-'U27': 1.67,
-'U28': 1.67,
-'U29': 1.67,
-'U30': 1.67,
-'U31': 1.67,
-'U32': 1.67,
-'U33': 1.67,
-'U34': 1.67,
-'U35': 1.67,
-'U36': 1.67,
-'U37': 1.67,
-'U38': 1.67,
-'U39': 1.67,
-'U40': 1.67,
-'O1': 1.67,
-'O2': 1.67,
-'O3': 1.67,
-'O4': 1.67,
+bz0_birth_i = 1.67   # [Tesla], default value 1.67 T is the average field between Venus ECR peaks 
+
+bz0_birth = {  
+'U25': bz0_birth_i,
+'U26': bz0_birth_i,
+'U27': bz0_birth_i,
+'U28': bz0_birth_i,
+'U29': bz0_birth_i,
+'U30': bz0_birth_i,
+'U31': bz0_birth_i,
+'U32': bz0_birth_i,
+'U33': bz0_birth_i,
+'U34': bz0_birth_i,
+'U35': bz0_birth_i,
+'U36': bz0_birth_i,
+'U37': bz0_birth_i,
+'U38': bz0_birth_i,
+'U39': bz0_birth_i,
+'U40': bz0_birth_i,
+'O1': bz0_birth_i,
+'O2': bz0_birth_i,
+'O3': bz0_birth_i,
+'O4': bz0_birth_i
          }
 
 
