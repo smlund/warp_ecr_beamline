@@ -118,6 +118,7 @@ ptitles('Venus ECR Solenoid: Linear Optics B_r_/r','z [m]','(B_r_/r)(r=0,z) [Tes
 fma() 
 
 # Save linear field data to an external binary array 
+#fo = PWpickle.PW("ecr_venus.lin.20140602.pkl")  old pickle file which does not include fringe field extension
 fo = PWpickle.PW("ecr_venus.lin.20160218.pkl")
 fo.ecr_venus_bz_peak = bz_peak 
 fo.ecr_venus_bz_extr = bz_extr
