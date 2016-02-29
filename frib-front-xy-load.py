@@ -28,34 +28,7 @@ if birth_mode == 1:
 	  b_r2_j = ptheta[ii] / s.charge*2*s.mass*clight
 	  
 	  krot_launch = (b_r2_j/rms_launch**2 - bz0_launch)/(2.*brho)
-	  krot_v      = bz0_birth/(2.*brho)
-	  # 
-	  sp_krot_launch.update({ii:krot_launch})
-	  sp_krot_v.update({ii:krot_v}) 
-	  #
-	  s.uxp -= krot_launch*s.yp*s.uzp
-	  s.uyp += krot_launch*s.xp*s.uzp
-
-
-# Beam loading for the 2nd birth mode
-
-if birth_mode == 2:
-
-	bz0_launch = getappliedfields(x=0.,y=0.,z=z_launch)[5]      # B_z on-axis at simulation launch location 
-	
-	sp_krot_launch = {}
-	sp_krot_v      = {} 
-	for ii in sp.keys():
-	  s = sp[ii]
-	  # --- rigidity 
-	  gamma = 1./sqrt(1.-(s.vbeam/clight)**2)
-	  brho  = gamma*s.mass*s.vbeam/s.charge
-	  # --- rms calculation
-	  rms_launch = sqrt(average( (s.xp)**2 + (s.yp)**2 ))
-	  # --- rot wavenumbers at launch and in vacuum v
-	  
-	  krot_launch = (bz0_birth*rms_birth**2/rms_launch**2 - bz0_launch)/(2.*brho)
-	  krot_v      = bz0_birth/(2.*brho)
+	  krot_v      = b_r2_j/rms_launch**2/(2.*brho)
 	  # 
 	  sp_krot_launch.update({ii:krot_launch})
 	  sp_krot_v.update({ii:krot_v}) 
@@ -64,9 +37,9 @@ if birth_mode == 2:
 	  s.uyp += krot_launch*s.xp*s.uzp
 		 
 
-# Beam loading for the 3rd birth mode
+# Beam loading for the 2nd birth mode
 
-if birth_mode == 3:
+if birth_mode == 2:
 
 	bz0_launch = getappliedfields(x=0.,y=0.,z=z_launch)[5]      # B_z on-axis at simulation launch location 
 	
@@ -143,12 +116,12 @@ def field_two_peak(ecr_zmin):
 bfieldinfo = field_two_peak(ecr_zmmin)
 
 
-# Beam loading for the 4th birth mode
+# Beam loading for the 3rd birth mode
 # Define a number of slots corresponding to even spaced positions between and including the two peaks
 # For each species, divide number of particles by slot number and place the quotient into each slot
 # Distribute the remainder evenly between the two peaks
 
-if birth_mode == 4:
+if birth_mode == 3:
 
 	peak1 = bfieldinfo[2]
 	peak2 = bfieldinfo[3]
