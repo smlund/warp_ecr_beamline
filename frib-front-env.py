@@ -134,7 +134,9 @@ def f(state_vector, rrr):
 	
 ## build third lot in deriv output (i.e. sigma'' )
 
-	# generate list of neutralization factors
+	# generate list of neutralization factors	
+	#    although the current structure loops over dictionaries, looping over arrays (defined for this sole purpose)
+	#    have been tried and showed no appreciable improvement in speed
 	
 	species_neut_f   = zeros(top.ns)
 	
