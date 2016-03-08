@@ -334,6 +334,18 @@ bz0_birth = {
 'O4': bz0_birth_i
          }
 
+#
+# Reference particle specification 
+# 
+# The reference particle dictates how the dipole bend strength(s) are set to bend the required angles. 
+#   * Set consistently with kinetic energy gain of reference charge state when accelerated through 
+#     the source extractor and downstream ES gap to achieve the desired KeV/u energy to feed the 
+#     downstream RFQ.    
+#
+# ref_mode = 0             : Use average species mass and charge state from target species list sp_target  
+#            "Species Name": Use specified species name: e.g. "U33" 
+#                              (typically should be in target species list sp_target, but can be any)
+
 
 #
 # Define transverse simulation grid and properties of self-field solver 
