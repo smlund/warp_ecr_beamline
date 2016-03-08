@@ -85,9 +85,19 @@ execfile("frib-front-xy-params-U.py")
 top.wpid = nextpid()       # pid index for variable weights: initialize on generate  
 uzp0pid  = nextpid() - 1   # pid index for initial uz to scale weights: initialize on generate  
 
+# Reference species
+#  * Used to set gap accel and dipole bends 
+#  * Set consistent with options in parameter specification file. 
+#  * Corresponding reference particle energy to set bend strength set in lattice 
+#    specification script 
+#  * Logic sets:
+#      m_ref = mass   ref particle [kg]    A_ref = m_ref/amu 
+#      q_ref = charge ref particle [C]     Q_ref = q_ref/echarge 
+#    These need not correspond to physical particle species (charge states 
+#    can be non-integer).  
+#
 
-# --- Reference species generation (in accordance with ref_mode set in "frib-front-xy-params-[species].py")
-
+# --- reference defined by average target species 
 if ref_mode == 0:
 	A_ref = 0. 
 	Q_ref = 0. 
@@ -97,6 +107,7 @@ if ref_mode == 0:
 		Q_ref += s.charge/echarge 
 	A_ref = A_ref/len(sp_target) 
 	Q_ref = Q_ref/len(sp_target) 
+# --- reference defined by current weighted average target species
 elif ref_mode == 2:
 	A_ref = 0. 
 	Q_ref = 0. 
@@ -108,6 +119,16 @@ elif ref_mode == 2:
 		target_current += ibeam[ii]
 	A_ref = A_ref/target_current 
 	Q_ref = Q_ref/target_current 
+# --- reference defined by named species 
+elif ref_mode in sp.keys():
+  A_ref = sp[ref_mode].mass/amu  
+  Q_ref = sp[ref_mode].charge/echarge 
+# --- reference A_ref and Q_ref input 
+elif ref_mode == 3:
+  pass  
+# --- error trap 
+else:
+  raise Exception("Error: ref_mode not set properly")   
 
 m_ref = A_ref*amu
 q_ref = Q_ref*echarge
