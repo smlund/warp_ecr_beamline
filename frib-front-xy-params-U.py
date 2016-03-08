@@ -345,48 +345,24 @@ bz0_birth = {
 # ref_mode = 0             : Use average species mass and charge state from target species list sp_target  
 #            "Species Name": Use specified species name: e.g. "U33" 
 #                              (typically should be in target species list sp_target, but can be any)
-#            1             : Use spefified values of m_ref and q_ref
-#               m_ref = mass   reference species [kg]  (reset if ref_mode not equal 1)  
-#               q_ref = charge reference species [C]   (reset if ref_mode not equal 1)
+#            1             : Use spefified values of A_ref and Q_ref
+#               A_ref = mass   reference species [amu]  (reset if ref_mode not equal 1)  
+#               Q_ref = charge reference species [e]   (reset if ref_mode not equal 1)
 #            2             : Use current-weighted average of species mass and charge state from target species list sp_target
 
 ## Would it be more convenient to use the existing notation A_ref (dimensionless) and Q_ref (in echarge)
 ## or should m_ref and q_ref be adapated in other parts of the code?
 
+## Case for specified species name can be subsumed under ref_mode = 0, since the user can just name one species in sp_target ?
+
 ref_mode = 0 # (reminder: ref_mode = 1 requires manual input of A_ref and Q_ref)
 
-## Input for ref_mode = 1
-
-m_ref = 238.03891*amu 
-q_ref = 33.5*echarge 
+## Input for ref_mode = 1 (default value is average of U33+ and U34+)
 
 A_ref = 238.03891 
 Q_ref = 33.5
 
-if ref_mode == 0:
-	A_ref = 0. 
-	Q_ref = 0. 
-	for ii in sp_target:
-		s = sp[ii]
-		A_ref += s.mass/amu 
-		Q_ref += s.charge/echarge 
-	A_ref = A_ref/len(sp_target) 
-	Q_ref = Q_ref/len(sp_target) 
-elif ref_mode == 1:
-elif ref_mode == 2:
-	A_ref = 0. 
-	Q_ref = 0. 
-	target_current = 0.
-	for ii in sp_target:
-		s = sp[ii]
-		A_ref += s.mass*ibeam[ii]/amu 
-		Q_ref += s.charge*ibeam[ii]/echarge 
-		target_current += ibeam[ii]
-	A_ref = A_ref/target_current 
-	Q_ref = Q_ref/target_current 
-	
 
-m_ref = A_ref*amu 
 
 
 #
