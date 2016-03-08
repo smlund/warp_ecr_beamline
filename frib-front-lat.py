@@ -254,7 +254,7 @@ else:
 
 d5p1_zc  = 69.581900   # D5 1: z-center  
 d5p1_str = 1.0         # D5 1: Input field scale factor
-d5p1_typ = "3d"        # D5 1: type: "lin" = linear optics fields or "3d" = 3d field  
+d5p1_typ = "3d"        # D5 1: type: "ideal" = uniform By, "lin" = linear optics fields, "3d" = 3d field  
 
 # --- nonlinear element data 
 fi = PRpickle.PR('lat_d5.3d.20140527.pkl') 
@@ -277,7 +277,18 @@ d5_3d_zlen = d5_3d_z_m.max() - d5_3d_z_m.min()
 d5_3d_id = addnewbgrddataset(dx=d5_3d_dx,dy=d5_3d_dy,zlength=d5_3d_zlen,bx=d5_3d_bx_m,by=d5_3d_by_m,bz =d5_3d_bz_m) 
 
 # --- define dipole d5 
-if d5p1_typ == "lin":
+if d5p1_typ == "ideal": 
+  # Johnathan: add ideal dipole spec.
+  #  * Place about central coordinate 
+  #  * Make length (z-start and z-stop) consistent with length from start to 3D dipole structure to end of. 
+  #  * Set uniform By field needed from ref particle spec (mass, charge, and energy)
+  #  * Do not auto-generate bend on mesh with dipole .... set that explicitly below.
+  #  * You may want to calculate the above regardless of dipole modeling option since the information 
+  #    will probably be used to setup the mesh bend which will be based on the ideal (uniform) dipole field.  
+  #  * Make comments and remove placeholder comments here when done!     
+  print("Warning: No D5 1st Dipole Ideal Fields Defined")
+  d5p1 = None 
+elif d5p1_typ == "lin":
   print("Warning: No D5 1st Dipole Linear Applied Fields Defined")
   d5p1 = None
 elif d5p1_typ == "nl":
@@ -287,6 +298,13 @@ else:
   print("Warning: No D5 1st Dipole Applied Fields Defined") 
   d5p1 = None
 
+# Lattice bends for D5 Bending Dipole 
+
+d5p1_bend = True  # True or False: Add ideal bend to lattice 
+
+# Johnanthan:  Add code here to  define consistent uniform bend in mesh.  This should be based on the 
+# ideal dipole field defined for the corresponding D5 dipole. This bend will be used regardless of 
+# whether we use a linear or nonlinear field.  
 
 # Neutralization specifications 
 #
