@@ -345,7 +345,13 @@ bz0_birth = {
 # ref_mode = 0             : Use average species mass and charge state from target species list sp_target  
 #            "Species Name": Use specified species name: e.g. "U33" 
 #                              (typically should be in target species list sp_target, but can be any)
+#            1             : Use spefified values of m_ref and q_ref
+#               m_ref = mass   reference species [kg]  (reset if ref_mode not equal 1)  
+#               q_ref = charge reference species [C]   (reset if ref_mode not equal 1) 
 
+ref_mode = 0 
+m_ref = 238.03891*amu 
+q_ref = 33.5*echarge 
 
 #
 # Define transverse simulation grid and properties of self-field solver 
