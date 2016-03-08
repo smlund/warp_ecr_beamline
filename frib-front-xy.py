@@ -86,18 +86,31 @@ top.wpid = nextpid()       # pid index for variable weights: initialize on gener
 uzp0pid  = nextpid() - 1   # pid index for initial uz to scale weights: initialize on generate  
 
 
-# --- Reference species as average of target 
-A_ref = 0. 
-Q_ref = 0. 
-for ii in sp_target:
-  s = sp[ii]
-  A_ref += s.mass/amu 
-  Q_ref += s.charge/echarge 
-A_ref = A_ref/len(sp_target) 
-Q_ref = Q_ref/len(sp_target)  
+# --- Reference species generation (in accordance with ref_mode set in "frib-front-xy-params-[species].py")
 
-m_ref = A_ref*amu 
-q_ref = Q_ref*echarge 
+if ref_mode == 0:
+	A_ref = 0. 
+	Q_ref = 0. 
+	for ii in sp_target:
+		s = sp[ii]
+		A_ref += s.mass/amu 
+		Q_ref += s.charge/echarge 
+	A_ref = A_ref/len(sp_target) 
+	Q_ref = Q_ref/len(sp_target) 
+elif ref_mode == 2:
+	A_ref = 0. 
+	Q_ref = 0. 
+	target_current = 0.
+	for ii in sp_target:
+		s = sp[ii]
+		A_ref += s.mass*ibeam[ii]/amu 
+		Q_ref += s.charge*ibeam[ii]/echarge 
+		target_current += ibeam[ii]
+	A_ref = A_ref/target_current 
+	Q_ref = Q_ref/target_current 
+
+m_ref = A_ref*amu
+q_ref = Q_ref*echarge
 
 
 # Calculate vbeam and other species quantities for defined species 
