@@ -350,11 +350,6 @@ bz0_birth = {
 #               Q_ref = charge reference species [e]   (reset if ref_mode not equal 1)
 #            2             : Use current-weighted average of species mass and charge state from target species list sp_target
 
-## Would it be more convenient to use the existing notation A_ref (dimensionless) and Q_ref (in echarge)
-## or should m_ref and q_ref be adapated in other parts of the code?
-
-## Case for specified species name can be subsumed under ref_mode = 0, since the user can just name one species in sp_target ?
-
 ref_mode = 0 # (reminder: ref_mode = 1 requires manual input of A_ref and Q_ref)
 
 ## Input for ref_mode = 1 (default value is average of U33+ and U34+)
