@@ -340,24 +340,22 @@ bz0_birth = {
 # The reference particle dictates how the dipole bend strength(s) are set to bend the required angles. 
 #   * Set consistently with kinetic energy gain of reference charge state when accelerated through 
 #     the source extractor and downstream ES gap to achieve the desired KeV/u energy to feed the 
-#     downstream RFQ.    
+#     downstream RFQ. 
+#   * Works by specifying mass and charge of reference particle: A_ref and Q_ref .
+#   * Values of A_ref and Q_ref below may be reset depending on set option.      
+#   
 #
 # ref_mode = 0             : Use average species mass and charge state from target species list sp_target  
 #            "Species Name": Use specified species name: e.g. "U33" 
 #                              (typically should be in target species list sp_target, but can be any)
 #            1             : Use spefified values of A_ref and Q_ref
 #               A_ref = mass   reference species [amu]  (reset if ref_mode not equal 1)  
-#               Q_ref = charge reference species [e]   (reset if ref_mode not equal 1)
+#               Q_ref = charge reference species [e]    (reset if ref_mode not equal 1)
 #            2             : Use current-weighted average of species mass and charge state from target species list sp_target
 
-ref_mode = 0 # (reminder: ref_mode = 1 requires manual input of A_ref and Q_ref)
-
-## Input for ref_mode = 1 (default value is average of U33+ and U34+)
-
-A_ref = 238.03891 
-Q_ref = 33.5
-
-
+ref_mode = 0 
+A_ref = 238.03891    # reset when ref_mode not 1 
+Q_ref = 33.5         # reset when ref_mode not 1 
 
 
 #
