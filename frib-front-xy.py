@@ -436,7 +436,7 @@ step(n_step)
 #dump() 
 
 # Make plot of final Brho by species 
-plt_diag_bro(label = "Final Rigidity by Species") 
+# plt_diag_bro(label = "Final Rigidity by Species")   ## Turned this off, seems to be problematic because some species are completely scrapped
 
 # Output data to auxillary file
 output_data = false 
