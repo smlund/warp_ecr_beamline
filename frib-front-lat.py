@@ -254,7 +254,7 @@ else:
 
 d5p1_zc  = 69.581900   # D5 1: z-center  
 d5p1_str = 1.0         # D5 1: Input field scale factor
-d5p1_typ = "3d"        # D5 1: type: "ideal" = uniform By, "lin" = linear optics fields, "3d" = 3d field  
+d5p1_typ = "ideal"        # D5 1: type: "ideal" = uniform By, "lin" = linear optics fields, "3d" = 3d field  
 
 # --- nonlinear element data 
 fi = PRpickle.PR('lat_d5.3d.20140527.pkl') 
@@ -276,6 +276,12 @@ d5_3d_zlen = d5_3d_z_m.max() - d5_3d_z_m.min()
 
 d5_3d_id = addnewbgrddataset(dx=d5_3d_dx,dy=d5_3d_dy,zlength=d5_3d_zlen,bx=d5_3d_bx_m,by=d5_3d_by_m,bz =d5_3d_bz_m) 
 
+# Starting and ending position of first ideal D5 dipole.
+# Also used to define the lattice bend
+
+d5p1_zs = 69.2 # may need to be revised upon obtaining lattice design data
+d5p1_ze = d5p1_zc + (d5p1_zc - d5p1_zs)
+
 # --- define dipole d5 
 if d5p1_typ == "ideal": 
   # Johnathan: add ideal dipole spec.
@@ -285,9 +291,12 @@ if d5p1_typ == "ideal":
   #  * Do not auto-generate bend on mesh with dipole .... set that explicitly below.
   #  * You may want to calculate the above regardless of dipole modeling option since the information 
   #    will probably be used to setup the mesh bend which will be based on the ideal (uniform) dipole field.  
-  #  * Make comments and remove placeholder comments here when done!     
-  print("Warning: No D5 1st Dipole Ideal Fields Defined")
-  d5p1 = None 
+  #  * Make comments and remove placeholder comments here when done!  
+  # print("Warning: No D5 1st Dipole Ideal Fields Defined")
+  # d5p1 = None 
+	bending_R = (d5p1_ze - d5p1_zs)*2/pi
+	bending_B = sqrt( A_ref*ekin_per_u*jperev*2*A_ref*amu)/(Q_ref*jperev)/bending_R
+	d5p1 = addnewdipo(zs = d5p1_zs, ze = d5p1_ze, by = bending_B)
 elif d5p1_typ == "lin":
   print("Warning: No D5 1st Dipole Linear Applied Fields Defined")
   d5p1 = None
@@ -305,6 +314,14 @@ d5p1_bend = True  # True or False: Add ideal bend to lattice
 # Johnanthan:  Add code here to  define consistent uniform bend in mesh.  This should be based on the 
 # ideal dipole field defined for the corresponding D5 dipole. This bend will be used regardless of 
 # whether we use a linear or nonlinear field.  
+
+if d5p1_bend:
+	top.diposet = False # turn off By that automatically comes with addnewbend otherwise
+	addnewbend(zs = d5p1_zs, ze = d5p1_ze, rc = (d5p1_ze - d5p1_zs)*2/pi)
+
+
+
+
 
 # Neutralization specifications 
 #
