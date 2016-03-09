@@ -14,7 +14,7 @@
 #  env_ds = envelope solution step size [m]
 
 env_zs = z_launch
-env_ze = z_adv
+env_ze = 69.2 - 0.1 # (halt the envelope solver before the first bend)
 env_ds = 5.*mm  
 
 # Longitudinal velocity correction terms in envelope model 
