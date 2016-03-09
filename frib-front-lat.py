@@ -283,23 +283,17 @@ d5p1_zs = 69.2 # may need to be revised upon obtaining lattice design data
 d5p1_ze = d5p1_zc + (d5p1_zc - d5p1_zs)
 
 # --- define dipole d5 
+
+# --- ideal (uniform) field 
 if d5p1_typ == "ideal": 
-  # Johnathan: add ideal dipole spec.
-  #  * Place about central coordinate 
-  #  * Make length (z-start and z-stop) consistent with length from start to 3D dipole structure to end of. 
-  #  * Set uniform By field needed from ref particle spec (mass, charge, and energy)
-  #  * Do not auto-generate bend on mesh with dipole .... set that explicitly below.
-  #  * You may want to calculate the above regardless of dipole modeling option since the information 
-  #    will probably be used to setup the mesh bend which will be based on the ideal (uniform) dipole field.  
-  #  * Make comments and remove placeholder comments here when done!  
-  # print("Warning: No D5 1st Dipole Ideal Fields Defined")
-  # d5p1 = None 
-	bending_R = (d5p1_ze - d5p1_zs)*2/pi
-	bending_B = sqrt( A_ref*ekin_per_u*jperev*2*A_ref*amu)/(Q_ref*jperev)/bending_R
-	d5p1 = addnewdipo(zs = d5p1_zs, ze = d5p1_ze, by = bending_B)
+  bending_R = (d5p1_ze - d5p1_zs)/(pi/2.)
+  bending_B = sqrt( A_ref*ekin_per_u*jperev*2.*A_ref*amu)/(Q_ref*jperev)/bending_R
+  d5p1 = addnewdipo(zs = d5p1_zs, ze = d5p1_ze, by = bending_B)
+# --- linear optic approximation field 
 elif d5p1_typ == "lin":
   print("Warning: No D5 1st Dipole Linear Applied Fields Defined")
   d5p1 = None
+# --- 3D field from magnet design code
 elif d5p1_typ == "nl":
   d5p1 = addnewbgrd(dx=d5_3d_dx,dy=d5_3d_dy,xs=d5_3d_x_m.min(),ys=d5_3d_y_m.min(),
     zs=d5p1_zc-d5_3d_zlen/2.,ze=d5p1_zc+d5_3d_zlen/2.,id=d5_3d_id,sc=d5p1_str)
@@ -307,17 +301,19 @@ else:
   print("Warning: No D5 1st Dipole Applied Fields Defined") 
   d5p1 = None
 
+
+#
 # Lattice bends for D5 Bending Dipole 
+#
+#  Comments:
+#   * Use ideal bends on lattice whether dipole field is ideal (uniform) or not.   
 
 d5p1_bend = True  # True or False: Add ideal bend to lattice 
 
-# Johnanthan:  Add code here to  define consistent uniform bend in mesh.  This should be based on the 
-# ideal dipole field defined for the corresponding D5 dipole. This bend will be used regardless of 
-# whether we use a linear or nonlinear field.  
 
 if d5p1_bend:
-	top.diposet = False # turn off By that automatically comes with addnewbend otherwise
-	addnewbend(zs = d5p1_zs, ze = d5p1_ze, rc = (d5p1_ze - d5p1_zs)*2/pi)
+  top.diposet = False     # turn off By that automatically generated with addnewbend()
+  addnewbend(zs = d5p1_zs, ze = d5p1_ze, rc = (d5p1_ze - d5p1_zs)/(pi/2.))
 
 
 
