@@ -33,6 +33,11 @@ species_env_vs_warp = ["U33"]
 species_terms_diff  = ["U33"]
 species_ke_diff     = ["U33", "U34"]
 
+# Envelope Plot Limits:
+plotxmin = env_zs
+plotxmax = env_ze
+plotymin = 0.
+plotymax = "e"
 
 ##############################################################################
 # End Inputs 
@@ -49,7 +54,7 @@ species_ke_diff     = ["U33", "U34"]
 
 termdatawarp = []
 
-for iii in range(0, top.jhist+1):
+for iii in range(0, last_step_number+1):
 	
 	xyz = 0
 	
@@ -147,6 +152,8 @@ for i in range(stepnum):
 
 plg(combinedenvelop,sss, color="black", type="dash")
 
+limits(plotxmin,plotxmax, plotymin, max(combinedenvelop)*1.1)
+
 fma()	
 
 
@@ -165,6 +172,8 @@ def envelope(iii):
     plg(psoln[:,js+20]*1000/sqrt(2),sss, color=co, type="dash")
     ptitles("Env. Model (dashed), Warp (solid), %s" % iii,"z [m]","RMS x-Envelope [mm]", )
     #limits(plotxmin,plotxmax, plotymin, plotymax)
+    
+    limits(plotxmin,plotxmax, plotymin, plotymax)
     
     fma()
 
@@ -198,6 +207,8 @@ if plot_extreme_brho == 1:
 	ptitles("Species with extreme rigidities, max(black): %s, min(red): %s" % (name1, name2),"z [m]","RMS x-Envelope [mm]", )
 	#limits(plotxmin,plotxmax, plotymin, plotymax)
 	
+	limits(plotxmin,plotxmax, plotymin, plotymax)
+	
 	fma()
 
 
@@ -225,11 +236,13 @@ for ii in sp_target:
       co = s.color
       A  = s.mass/amu
       #hpekin(js=js,color=co,titles=false,yscale=1./A,lhzbeam=true)
-      plg(hl_ekin[0:top.jhist+1,js]/(A*kV),top.hzbeam[0:top.jhist+1],color=co)        
+      plg(hl_ekin[0:last_step_number+1,js]/(A*kV),top.hzbeam[0:last_step_number+1],color=co)        
 ptitles("Kinetic Energy, Env. Model (dashed), Warp (solid)","z [m]","KeV/u", )
 
 plg(psoln[:,0]/1000/238.02891,sss, color="magenta", type="dash")
 plg(psoln[:,1]/1000/238.02891,sss, color="green", type="dash")
+
+limits(plotxmin,plotxmax, plotymin, plotymax)
 
 fma()
 
@@ -273,6 +286,8 @@ def env_terms(ii):
 	
 	ptitles("%s Env. Model Terms, black-dash:E green:dEdz black:B red:SC blue:Emit" % ii,"z [m]","sigma'' [rad/m]",)
 	
+	limits(plotxmin,plotxmax, plotymin, plotymax)
+	
 	fma()
 
 
@@ -304,6 +319,8 @@ def warp_terms(ii):
 	
 	ptitles("%s WARP terms, black-dash:E green:dEdz black:B red:SC blue:Emit" % ii,"z [m]","sigma'' [rad/m]",)
 	
+	limits(plotxmin,plotxmax, plotymin, plotymax)
+	
 	fma()
 
 for iii in species_warp_terms:
@@ -333,26 +350,31 @@ def env_vs_warp(ii):
 	plg(termdata3[:,2],termdata3[:,1])
 	plg(termdatawarp3[:,2],termdatawarp3[:,1], type="dash")
 	ptitles("%s Term 1 (E-field), Env. Modelinput (solid), WARPinput (dashed)" % ii,"z [m]","sigma'' [rad/m]",)
+	limits(plotxmin,plotxmax, plotymin, plotymax)
 	fma()
 	
 	plg(termdata3[:,3],termdata3[:,1])
 	plg(termdatawarp3[:,3],termdatawarp3[:,1], type="dash")
 	ptitles("%s Term 2 (dEdz), Env. Modelinput (solid), WARPinput (dashed)" % ii,"z [m]","sigma'' [rad/m]",)
+	limits(plotxmin,plotxmax, plotymin, plotymax)
 	fma()
 	
 	plg(termdata3[:,4],termdata3[:,1])
 	plg(termdatawarp3[:,4],termdatawarp3[:,1], type="dash")
 	ptitles("%s Term 3 (B-field), Env. Modelinput (solid), WARPinput (dashed)" % ii,"z [m]","sigma'' [rad/m]",)
+	limits(plotxmin,plotxmax, plotymin, plotymax)
 	fma()
 	
 	plg(termdata3[:,5],termdata3[:,1])
 	plg(termdatawarp3[:,5],termdatawarp3[:,1], type="dash")
 	ptitles("%s Space Charge Term, Env. Modelinput (solid), WARPinput (dashed)" % ii,"z [m]","sigma'' [rad/m]",)
+	limits(plotxmin,plotxmax, plotymin, plotymax)
 	fma()
 	
 	plg(termdata3[:,6],termdata3[:,1])
 	plg(termdatawarp3[:,6],termdatawarp3[:,1], type="dash")
 	ptitles("%s Emittance Term, Env. Modelinput (solid), WARPinput (dashed)" % ii,"z [m]","sigma'' [rad/m]",)
+	limits(plotxmin,plotxmax, plotymin, plotymax)
 	fma()
 
 for iii in species_env_vs_warp:
@@ -410,6 +432,8 @@ def terms_diff(ii):
 	
 	ptitles("%s Env. Modelinput minus WARPinput for different terms" % ii,"z [m]","sigma'' [rad/m]",)
 	
+	limits(plotxmin,plotxmax, plotymin, plotymax)
+	
 	fma()
 
 for iii in species_terms_diff:
@@ -459,6 +483,8 @@ for iii in species_ke_diff:
 
 ptitles("KE Difference between Env. Model and WARP","z [m]","% difference",)
 	
+limits(plotxmin,plotxmax, plotymin, plotymax)
+
 fma()
 
 
@@ -502,6 +528,8 @@ if integratewarp == 1:
 		combinedenvelop[i] = SumofR2overN**0.5*1000/sqrt(2)
 	
 	plg(combinedenvelop,sss, color="black", type="dash")	
+	
+	limits(plotxmin,plotxmax, plotymin, plotymax)
 	
 	fma()
 	
@@ -555,6 +583,8 @@ if integratewarp == 1:
 		combinedenvelop[i] = SumofR2overN**0.5*1000/sqrt(2)
 	
 	plg(combinedenvelop,sss, color="black")	
+	
+	limits(plotxmin,plotxmax, plotymin, max(combinedenvelop)*1.1)
 	
 	fma()
 
