@@ -209,9 +209,11 @@ state_vector_2 = zeros(3*top.ns)
 
 deltaz = stepsize/2.
 
+last_step_number = int((env_ze-env_zs)/ds_diag) + 1 # employed in out-of-range interpolation
+
 zlist = []
 		
-zlist = array([top.hzbeam[kkk] for kkk in range(0, top.jhist+1)])
+zlist = array([top.hzbeam[kkk] for kkk in range(0, last_step_number + 1)])
 
 def fwarp(state_vector_2, rrr):
 	
@@ -253,15 +255,15 @@ def fwarp(state_vector_2, rrr):
 		#for kkk in range(len(top.hepsr)):
 			#emittancelist = emittancelist.append(top.hepsr[0,kkk,j])
 		
-		emittancelist = array([hl_epsrn[kkk,j] for kkk in range(0, top.jhist+1)])
+		emittancelist = array([hl_epsrn[kkk,j] for kkk in range(0, last_step_number+1)])
 		
 		pthetaLIST = []
 		
-		pthetaLIST = array([hl_pthn[kkk,j] for kkk in range(0, top.jhist+1)])
+		pthetaLIST = array([hl_pthn[kkk,j] for kkk in range(0, last_step_number+1)])
 		
 		kineticenergylist = []
 		
-		kineticenergylist = array([hl_ekin[kkk,j] for kkk in range(0, top.jhist+1)])
+		kineticenergylist = array([hl_ekin[kkk,j] for kkk in range(0, last_step_number+1)])
 		
 		emitinter = interpolate.interp1d(zlist, emittancelist, kind='slinear')
 		
@@ -274,9 +276,9 @@ def fwarp(state_vector_2, rrr):
 			ptheta_j = hl_pthn[0,j]
 			ke_j = hl_ekin[0,j]
 		elif rrr >= env_ze:
-			emittance_j = hl_epsrn[top.jhist,j]
-			ptheta_j = hl_pthn[top.jhist,j]
-			ke_j = hl_ekin[top.jhist,j]		
+			emittance_j = hl_epsrn[last_step_number,j]
+			ptheta_j = hl_pthn[last_step_number,j]
+			ke_j = hl_ekin[last_step_number,j]		
 		else:
 			emittance_j = emitinter(rrr)
 			ptheta_j = pthetainter(rrr)
