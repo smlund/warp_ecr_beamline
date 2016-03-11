@@ -36,7 +36,7 @@ species_ke_diff     = ["U33", "U34"]
 # Envelope Plot Limits:
 plotxmin = env_zs
 plotxmax = env_ze
-plotymin = 0.
+plotymin = "e"
 plotymax = "e"
 
 ##############################################################################
@@ -529,7 +529,7 @@ if integratewarp == 1:
 	
 	plg(combinedenvelop,sss, color="black", type="dash")	
 	
-	limits(plotxmin,plotxmax, plotymin, plotymax)
+	limits(plotxmin,plotxmax, plotymin, max(combinedenvelop)*1.1)
 	
 	fma()
 	
