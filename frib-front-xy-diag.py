@@ -71,9 +71,13 @@ diag_part_z = array([
   #gag_col_zs-5.*cm,
   #gag_col_ze,
   gag_col_ze+5.*cm,
-  z_adv,
-  (s4p1_zc+gag_zc)/2.,
-  (s4p2_zc+z_adv)/2. ]) 
+  d5p1_zs,
+  (d5p1_zs+d5p1_zc)/2,
+  d5p1_zc,
+  (d5p1_zc+d5p1_ze)/2,
+  d5p1_ze,
+  (d5p1_ze+z_adv)/2,
+  z_adv]) 
 
 diag_part_z_name = [ 
   "Initial Launch", 
@@ -88,10 +92,14 @@ diag_part_z_name = [
   #"Grated Gap: z-Center - 5 cm", 
   #"Grated Gap: z-End",
   "Grated Gap: z-End + 5 cm", 
-  "Final: Before D2 Dipole",
-  "Between S4 Solenoid #1 and Grated Gap",
-  "Between S4 Solenoid #2 and Final (Before D2 Dipole)" 
-                   ]
+  "D5 Dipole #1: z-start",
+  "D5 Dipole #1: 1/4 of dipole length",
+  "D5 Dipole #1: z-Center",
+  "D5 Dipole #1: 3/4 of dipole length",
+  "D5 Dipole #1: z-end",
+  "Between D5 Dipole #1 and Final",
+  "Final position" 
+                   ]      
 
 diag_part_step = nint((diag_part_z-z_launch)/wxy.ds)
 
@@ -107,6 +115,7 @@ diag_field_z = array([
   z_launch,
   s4p1_zc,gag_zc,
   s4p2_zc,
+  d5p1_zc,
   z_adv 
                     ]) 
 
@@ -114,8 +123,9 @@ diag_field_z_name = [
   "Initial Launch", 
   "S4 Solenoid #1: z-Center", 
   "Grated Gap: z-Center",
-  "S4 Solenoid #1: z-Center", 
-  "Final: Before D2 Dipole"
+  "S4 Solenoid #1: z-Center",
+  "D5 Dipole #1: z-Center", 
+  "Final position"
                      ]
 
 diag_field_step = nint((diag_field_z-z_launch)/wxy.ds)
