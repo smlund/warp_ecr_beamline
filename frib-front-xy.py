@@ -417,7 +417,14 @@ diag_calls()
 
 #raise Exception("to here")
 n_step = nint((z_adv-z_launch)/wxy.ds) + 1   # add one step in case of roundoff 
-step(n_step)
+step_rigidities_plot = nint(((d5p1_zc + s4p2_zc)/2-z_launch)/wxy.ds)
+
+step(step_rigidities_plot)
+
+# Make plot of final Brho by species 
+plt_diag_bro(label = "Final Rigidity by Species") # now takes place between 2nd S4 Solenoid and 1st D5 Dipole
+
+step(n_step-step_rigidities_plot)
 
 
 # Make additional history plots for final run if not already called 
@@ -435,8 +442,7 @@ step(n_step)
 #
 #dump() 
 
-# Make plot of final Brho by species 
-# plt_diag_bro(label = "Final Rigidity by Species")   ## Turned this off, seems to be problematic because some species are completely scrapped
+
 
 # Output data to auxillary file
 output_data = false 
