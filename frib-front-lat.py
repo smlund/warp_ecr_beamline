@@ -32,7 +32,7 @@ ecr_typ    = "lin"                  # type: "lin" = linear optics fields or "nl"
 
 # --- linear element data  
 #fi = PRpickle.PR("lat_ecr_venus.lin.20140602.pkl")  old data file which does not include fringe field extension
-fi = PRpickle.PR("lat_ecr_venus.lin.20160218.pkl")
+fi = PRpickle.PR("ecr_venus/lat_ecr_venus.lin.20160218.pkl")
 ecr_bz_extr = fi.ecr_venus_bz_extr
 ecr_dz = fi.ecr_venus_dz 
 ecr_nz = fi.ecr_venus_nz  
