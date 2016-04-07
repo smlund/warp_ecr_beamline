@@ -403,6 +403,9 @@ def diag_hist_hl():
 # Particle Phase-Space Diagnostic Functions 
 # * Make specified plots at location of simulation where diag_part() is called.  
 
+### Make phase space projections of individual species using the syntax "ppxxp(js=js)" instead of "s.ppxxp"
+### The latter had trouble with the argument ' slope="auto" '
+
 def diag_part(plt_xy=False,plt_xxp=False,plt_yyp=False,plt_xpyp=False,
               plt_trace=False, plt_denxy=False, plt_denr=False):
   print "Making particle diagnostic plots"
@@ -428,7 +431,8 @@ def diag_part(plt_xy=False,plt_xxp=False,plt_yyp=False,plt_xpyp=False,
       s = sp[ii]
       co = s.color
       lab+= ii + "("+co+"), "
-      s.ppxy(lframe=true,chopped=chop_fraction,titles=false,yscale=1./mm,xscale=1./mm)
+      js = s.js
+      ppxy(js=js,lframe=true,chopped=chop_fraction,titles=false,yscale=1./mm,xscale=1./mm,color=co)
     ptitles("x-y Phase Space: "+lab+" z = %5.2f m"%(top.zbeam),"x [mm]","y [mm]",z_label)
     fma()
   # --- x-x' projection
@@ -446,7 +450,8 @@ def diag_part(plt_xy=False,plt_xxp=False,plt_yyp=False,plt_xpyp=False,
       s = sp[ii]
       co = s.color
       lab+= ii + "("+co+"), "
-      s.ppxxp(lframe=true,chopped=chop_fraction,slope='auto',titles=false,yscale=1./mr,xscale=1./mm)
+      js = s.js
+      ppxxp(js=js,lframe=true,chopped=chop_fraction,slope='auto',titles=false,yscale=1./mr,xscale=1./mm,color=co)
     ptitles("x-x' Phase Space: "+lab+" z = %5.2f m"%(top.zbeam),"x [mm]","x' [mrad]",z_label)
     fma()
   # --- y-y' projection
@@ -466,7 +471,8 @@ def diag_part(plt_xy=False,plt_xxp=False,plt_yyp=False,plt_xpyp=False,
       s = sp[ii]
       co = s.color
       lab+= ii + "("+co+"), "
-      s.ppyyp(lframe=true,chopped=chop_fraction,slope='auto',titles=false,yscale=1./mr,xscale=1./mm)
+      js = s.js
+      ppyyp(js=js,lframe=true,chopped=chop_fraction,slope='auto',titles=false,yscale=1./mr,xscale=1./mm,color=co)
     ptitles("y-y' Phase Space: "+lab+" z = %5.2f m"%(top.zbeam),"y [mm]","y' [mrad]",z_label)
     fma()
   # --- x'-y' projection
@@ -484,7 +490,8 @@ def diag_part(plt_xy=False,plt_xxp=False,plt_yyp=False,plt_xpyp=False,
       s = sp[ii]
       co = s.color
       lab+= ii + "("+co+"), "
-      s.ppxpyp(lframe=true,chopped=chop_fraction,slope='auto',titles=false,yscale=1./mr,xscale=1./mm)
+      js = s.js
+      ppxpyp(js=js,lframe=true,chopped=chop_fraction,slope='auto',titles=false,yscale=1./mr,xscale=1./mm,color=co)
     ptitles("x'-y' Phase Space: "+lab+" z = %5.2f m"%(top.zbeam),"x' [mrad]","y' [mrad]",z_label)
     fma()
   # --- x-y, x-x', y-y', x'-y' projections, 4 to a page (trace-space)
