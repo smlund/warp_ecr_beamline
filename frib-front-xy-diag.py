@@ -30,7 +30,8 @@ top.itmomnts[0:3] = [0,max_diag_step,top.nhist]   # do loop ranges for moments
 #     use these ranges.  
 #      max/min x,y   plot coordinates (m) 
 #      max/min x',y' plot coordinates (rad)
-l_diag = r_p
+#l_diag = r_p
+l_diag = 75*mm
 top.xplmax =  l_diag  
 top.xplmin = -l_diag
 top.yplmax =  l_diag
@@ -76,7 +77,12 @@ diag_part_z = array([
   d5p1_zc,
   (d5p1_zc+d5p1_ze)/2,
   d5p1_ze,
-  (d5p1_ze+z_adv)/2,
+  valve_zc + 2*mm,
+  q7t1p1_zc,
+  q7t1_mid_12 + 2*mm,
+  q7t1p2_zc,
+  q7t1_mid_23 + 2*mm,
+  q7t1p3_zc,
   z_adv]) 
 
 diag_part_z_name = [ 
@@ -97,7 +103,12 @@ diag_part_z_name = [
   "D5 Dipole #1: z-Center",
   "D5 Dipole #1: 3/4 of dipole length",
   "D5 Dipole #1: z-end",
-  "Between D5 Dipole #1 and Final",
+  "after gate valve",
+  "1st Q7 ESQ Triplet #1: z-Center",
+  "after slits between Q7 #1 and #2",
+  "1st Q7 ESQ Triplet #2: z-Center",
+  "after slits between Q7 #2 and #3",
+  "1st Q7 ESQ Triplet #3: z-Center",
   "Final position" 
                    ]      
 
