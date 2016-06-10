@@ -389,7 +389,8 @@ n_grid = 400      # number grid cells (no symmetries)
 z_launch  = 66.540938  # Axial position in lattice to launch  beam 
                        #   = ecr_z_extr defined in lattice file.
 #z_adv     = 69.2       # Axial position in lattice to advance to (69.2 was end point before bend was introduced)  
-z_adv     = 69.581900 + 0.75       # Center of D5 dipole + half of axial length of 3d dipole field data
+#z_adv     = 69.581900 + 0.75       # Center of D5 dipole + half of axial length of 3d dipole field data
+z_adv     = 71.6       # Four jaw collimator
 
 
 ds = 2.*mm             # Axial advance step 
