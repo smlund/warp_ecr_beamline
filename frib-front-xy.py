@@ -304,8 +304,12 @@ package("wxy"); generate()
 execfile("frib-front-lat-diag.py") 
 
 # Install conducting aperture on mesh for fieldsolves 
-for i in aperture:
-  installconductors(i,dfill=largepos) # will trigger "list has no attribute" error if aperture is used in installconductors
+#for i in aperture:
+  #installconductors(i,dfill=largepos) # will trigger "list has no attribute" error if aperture is used in installconductors
+
+# Install conductors
+for i in scraperlist:
+  installconductors(i) # will trigger "list has no attribute" error if scraperlist is used as argument directrly
 
 # Check that inputs are consistent with symmetries (errorcheck package function)
 checksymmetry()
@@ -336,7 +340,7 @@ def adjustments_before_rho():
     s.w[:] = s.w0*s.pid[:,uzp0pid]/s.uzp
     #  --- Scraping scraping aperture:
     #       Set for efficient removal of out of bounds particles. 
-    top.prwall = aperture_r(top.zbeam)
+    #top.prwall = aperture_r(top.zbeam)
 
 
 # Modify ion distribution at launch point based on different assumptions on their birth 
