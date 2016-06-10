@@ -248,11 +248,21 @@ else:
   gag = None 
 
 
+
+
+
+
+
+
+
+
+
+
 # D5 Bending Dipole 
 
 # --- element specification 
 
-d5p1_zc  = 69.581900   # D5 1: z-center  
+d5p1_zc  = 69.587759   # D5 1: z-center  
 d5p1_str = 1.0         # D5 1: Input field scale factor
 d5p1_typ = "ideal"        # D5 1: type: "ideal" = uniform By, "lin" = linear optics fields, "3d" = 3d field  
 
@@ -279,8 +289,15 @@ d5_3d_id = addnewbgrddataset(dx=d5_3d_dx,dy=d5_3d_dy,zlength=d5_3d_zlen,bx=d5_3d
 # Starting and ending position of first ideal D5 dipole.
 # Also used to define the lattice bend
 
-d5p1_zs = 69.2 # may need to be revised upon obtaining lattice design data
-d5p1_ze = d5p1_zc + (d5p1_zc - d5p1_zs)
+#d5p1_zs = 69.2 # may need to be revised upon obtaining lattice design data
+#d5p1_ze = d5p1_zc + (d5p1_zc - d5p1_zs)
+
+# Define starting and ending position of 1st ideal D5 dipole using ideal length and centre position
+# Makes the bend less tight than when the starting position is set to be 69.2 m
+
+d5p1_ideal_len = 1.0
+d5p1_zs = d5p1_zc - d5p1_ideal_len / 2
+d5p1_ze = d5p1_zc + d5p1_ideal_len / 2
 
 # --- define dipole d5 
 
@@ -313,7 +330,304 @@ d5p1_bend = True  # True or False: Add ideal bend to lattice
 
 if d5p1_bend:
   top.diposet = False     # turn off By that automatically generated with addnewbend()
-  addnewbend(zs = d5p1_zs, ze = d5p1_ze, rc = (d5p1_ze - d5p1_zs)/(pi/2.))
+  equivalent_ideal_R = (d5p1_ze - d5p1_zs)/(pi/2.)
+  equivalent_ideal_B = sqrt( A_ref*ekin_per_u*jperev*2.*A_ref*amu)/(Q_ref*jperev)/equivalent_ideal_R
+  addnewbend(zs = d5p1_zs, ze = d5p1_ze, rc = equivalent_ideal_R)
+
+
+dipole_exit = [[0.,0.],[0.,0.]]
+cccounter = 0
+
+for ii in sp_target:
+	s = sp[ii]
+	species_R = sqrt( s.charge*Bias*2.*s.mass)/(s.charge)/ equivalent_ideal_B
+	offset = sqrt( species_R**2 - (species_R - equivalent_ideal_R)**2 ) - equivalent_ideal_R
+	centroid_angle = arccos( 1 - equivalent_ideal_R / species_R ) - pi/2
+	
+	dipole_exit[cccounter][0] = offset
+	dipole_exit[cccounter][1] = centroid_angle*sign(offset)
+	
+	cccounter += 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Q7 Electrostatic Quads
+# Comment: linear and nonlinear variants must have same z-grid. 
+
+# --- element specification 
+
+q7t1p1_zc = 70.537759 # (q7: Q7 device type; t1: 1st triplet; p1: part 1)
+q7t1p1_str = 10000 # [V]
+q7t1p1_sign = 1    # +1 for x_quad, -1 for y_quad
+q7t1p1_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field
+
+inter_quad_distance = 0.335 # centroid distance between two quads in a triplet
+
+q7t1p2_zc = q7t1p1_zc + inter_quad_distance
+q7t1p2_str = 10000 # [V]
+q7t1p2_sign = -1   # +1 for x_quad, -1 for y_quad
+q7t1p2_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field
+
+q7t1p3_zc = q7t1p2_zc + inter_quad_distance
+q7t1p3_str = 10000 # [V]
+q7t1p3_sign = 1    # +1 for x_quad, -1 for y_quad
+q7t1p3_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field  
+
+## --- linear element data  
+##fi = PRpickle.PR("lat_s4.lin.20140603.pkl")
+#fi = PRpickle.PR("lat_s4.lin.20141031.pkl")
+#s4_dz  = fi.s4_dz 
+#s4_nz  = fi.s4_nz  
+#s4_z_m = fi.s4_z_m 
+#s4_bz0_m   = fi.s4_bz0_m
+#s4_bz0p_m  = fi.s4_bz0p_m
+#fi.close() 
+
+#s4_zlen = s4_z_m.max() - s4_z_m.min() 
+#s4_lin_id = addnewmmltdataset(zlen=s4_zlen,ms=s4_bz0_m,msp=s4_bz0p_m,nn=0,vv=0)
+
+# --- nonlinear element field data 
+#fi = PRpickle.PR('lat_s4.rz.20140603.pkl') 
+fi = PRpickle.PR('lat_q7.3d.20160607.pkl') 
+##
+#s4_len_coil   = fi.s4_len_coil 
+#s4_len_magnet = fi.s4_len_magnet 
+#s4_r_coil_i   = fi.s4_r_coil_i 
+#s4_r_coil_o   = fi.s4_r_coil_o
+#
+#if fi.s4_nz != s4_nz: raise Exception("S4: Nonlinear field model nz not equal to linear field model nz") 
+
+q7_dx   = fi.q7_dx
+q7_dy   = fi.q7_dy
+q7_dz   = fi.q7_dz
+q7_nx   = fi.q7_nx
+q7_ny   = fi.q7_ny
+q7_nz   = fi.q7_nz
+q7_x_m  = fi.q7_x_m 
+q7_y_m  = fi.q7_y_m 
+q7_z_m  = fi.q7_z_m 
+q7_ex_m  = fi.q7_ex_m 
+q7_ey_m  = fi.q7_ey_m 
+q7_ez_m  = fi.q7_ez_m 
+fi.close()
+
+q7_zlen = q7_z_m.max() - q7_z_m.min()
+q7_x_m_min = q7_x_m.min()
+q7_y_m_min = q7_y_m.min()
+
+## --- nonlinear element vector potential data 
+##fi = PRpickle.PR('lat_s4.at.20140603.pkl') 
+#fi = PRpickle.PR('lat_s4.at.20141031.pkl') 
+##
+#if fi.s4_nz != s4_nz: raise Exception("S4: Nonlin Vector potential model nz not equal to nonlinear/linear model nz")
+#if fi.s4_nr != s4_nr: raise Exception("S4: Nonlin Vector potential model nr not equal to nonlinear model nr")
+#s4_at_m  = fi.s4_at_m
+#fi.close() 
+
+## --- Axisymmetric b-field arrays must be 3d shape (nr+1,arb,nz+1) to load into Warp  
+#s4_br_m = fzeros((s4_nr+1,1,s4_nz+1))  
+#s4_br_m[:,0,:] = s4_br_m_in
+#s4_bz_m = fzeros((s4_nr+1,1,s4_nz+1))
+#s4_bz_m[:,0,:] = s4_bz_m_in
+
+q7_nl_id = addnewegrddataset(dx=q7_dx,dy=q7_dy,zlength=q7_zlen,ex=q7_ex_m,ey=q7_ey_m,ez=q7_ez_m)  # pass arb dy to avoid error trap  
+
+
+# --- define esq q7 1st triplet part 1 
+if q7t1p1_typ == "lin":
+  q7t1p1 = addnewmmlt(zs=q7t1p1_zc-q7_zlen/2.,ze=q7t1p1_zc+q7_zlen/2.,id=q7_lin_id,sc=q7t1p1_str*q7t1p1_sign) 
+elif q7t1p1_typ == "nl":
+  q7t1p1 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t1p1_zc-q7_zlen/2.,ze=q7t1p1_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t1p1_str*q7t1p1_sign) 
+else:
+  print("Warning: No S4 1st Solenoid Applied Fields Defined") 
+  q7t1p1 = None
+
+# --- define esq q7 1st triplet part 2
+if q7t1p2_typ == "lin":
+  q7t1p2 = addnewmmlt(zs=q7t1p2_zc-q7_zlen/2.,ze=q7t1p2_zc+q7_zlen/2.,id=q7_lin_id,sc=q7t1p2_str*q7t1p2_sign) 
+elif q7t1p2_typ == "nl":
+  q7t1p2 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t1p2_zc-q7_zlen/2.,ze=q7t1p2_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t1p2_str*q7t1p2_sign) 
+else:
+  print("Warning: No S4 1st Solenoid Applied Fields Defined") 
+  q7t1p2 = None
+
+# --- define esq q7 1st triplet part 3
+if q7t1p3_typ == "lin":
+  q7t1p3 = addnewmmlt(zs=q7t1p3_zc-q7_zlen/2.,ze=q7t1p3_zc+q7_zlen/2.,id=q7_lin_id,sc=q7t1p3_str*q7t1p3_sign) 
+elif q7t1p3_typ == "nl":
+  q7t1p3 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t1p3_zc-q7_zlen/2.,ze=q7t1p3_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t1p3_str*q7t1p3_sign) 
+else:
+  print("Warning: No S4 1st Solenoid Applied Fields Defined") 
+  q7t1p3 = None
+
+
+
+
+### Scrapers ###
+
+## Particles are not scraped if scraper is too thin w.r.t. simulation step size ##
+# From trial and error: use 4mm-thick slits, 10mm-thick walls for 2mm step size
+
+
+
+## Beam pipe (where the aperture is circular)
+
+r_p_up   = 8.00*cm  # aperture   upstream of grated gap [m]
+r_p_down = 7.62*cm  # aperture downstream of grated gap [m]
+
+post_d5p1_pipe_r = 7.5*cm
+post_d5p1_pipe_zs = d5p1_ze + 8*cm
+post_d5p1_pipe_ze = d5p1_ze + 8*cm +  229*mm
+
+q7t1_pipe_r = 12.4*cm
+q7t1_pipe_zs = post_d5p1_pipe_ze
+q7t1_pipe_ze = q7t1_pipe_zs + 952*mm
+
+r_ap   = array([r_p_up,               gag_rp,       r_p_down,   post_d5p1_pipe_r,     12.4*cm,       7.5*cm  ])
+v_ap   = array([SourceBias+StandBias, StandBias/2., 0.,         0.,                   0.,            0.]) 
+z_ap_l = array([ecr_z_extr,           gag_col_zs,   gag_col_ze, post_d5p1_pipe_zs,    q7t1_pipe_zs,  q7t1_pipe_ze])
+z_ap_u = array([gag_col_zs,           gag_col_ze,   d5p1_zs,    post_d5p1_pipe_ze,    q7t1_pipe_ze,  q7t1_pipe_ze + 300*mm])
+
+beampipe = [] 
+for i in range(len(r_ap)):
+  rp = r_ap[i] 
+  v  = v_ap[i] 
+  zl = z_ap_l[i] 
+  zu = z_ap_u[i]
+  #
+  beampipe.append( ZCylinderOut(radius=rp,zlower=zl,zupper=zu,voltage=v,condid="next") )
+
+r_p = max(r_ap)   # Max aperture in simulations 
+
+
+## Rectangular aperture in D5 Dipole:
+
+# Include an additional 8cm of rectangular aperture after 1m long D5 Dipole
+
+added_len = 8*cm
+
+d5p1_aperture_xplus = Box(xsize = 10*mm, ysize = 120*mm, zsize = d5p1_ideal_len + added_len, xcent = 80*mm, ycent = 0, zcent = d5p1_zc + added_len/2)
+d5p1_aperture_xminus = Box(xsize = 10*mm, ysize = 120*mm, zsize = d5p1_ideal_len + added_len, xcent = -80*mm, ycent = 0, zcent = d5p1_zc + added_len/2)
+d5p1_aperture_yplus = Box(xsize = 150*mm, ysize = 10*mm, zsize = d5p1_ideal_len + added_len, xcent = 0, ycent = 65*mm, zcent = d5p1_zc + added_len/2)
+d5p1_aperture_yminus = Box(xsize = 150*mm, ysize = 10*mm, zsize = d5p1_ideal_len + added_len, xcent = 0, ycent = -65*mm, zcent = d5p1_zc + added_len/2)
+
+d5p1_aperture = [d5p1_aperture_xplus, d5p1_aperture_xminus, d5p1_aperture_yplus, d5p1_aperture_yminus]
+
+## Gate valve
+
+valve_x_opening = 7*cm
+valve_y_opening = 10*cm
+valve_len = 4*mm
+valve_zc = q7t1p1_zc - 140*mm
+
+# These sizes are arbitrary, 
+valve_xsize = 7*cm
+valve_ysize = 10*cm
+
+
+valve_x_plus = Box(xsize = valve_xsize, ysize = valve_ysize, zsize = valve_len, xcent = (valve_x_opening + valve_xsize)/2, ycent = 0, zcent = valve_zc)
+valve_x_minus = Box(xsize = valve_xsize, ysize = valve_ysize, zsize = valve_len, xcent = -(valve_x_opening + valve_xsize)/2, ycent = 0, zcent = valve_zc)
+valve_y_plus = Box(xsize = valve_xsize, ysize = valve_ysize, zsize = valve_len, xcent = 0, ycent = (valve_y_opening + valve_ysize)/2, zcent = valve_zc)
+valve_y_minus = Box(xsize = valve_xsize, ysize = valve_ysize, zsize = valve_len, xcent = 0, ycent = -(valve_y_opening + valve_ysize)/2, zcent = valve_zc)
+
+gate_valve = [valve_x_plus, valve_x_minus, valve_y_plus, valve_y_minus]
+
+## End plates of the ESQs in the 1st triplet
+
+endplate_len = 4*mm
+endplate_aperture = 65*mm
+
+q7t1_endplate_1 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p1_zc - 19.5*mm)
+q7t1_endplate_2 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p1_zc + 19.5*mm)
+q7t1_endplate_3 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p2_zc - 19.5*mm)
+q7t1_endplate_4 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p2_zc + 19.5*mm)
+q7t1_endplate_5 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p3_zc - 19.5*mm)
+q7t1_endplate_6 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p3_zc + 19.5*mm)
+
+q7t1_endplates = [q7t1_endplate_1,q7t1_endplate_2,q7t1_endplate_3,q7t1_endplate_4,q7t1_endplate_5,q7t1_endplate_6]
+
+## Slits between ESQ in the 1st triplet
+
+# Slit sizes are arbitrarily chosen at present, only making sure they extend into the beam tube in transverse directions
+# The opening size in x is based on drawings
+
+q7t1_mid_12 = (q7t1p1_zc+q7t1p2_zc)/2  # mid-point between 1st and 2nd ESQ 
+q7t1_mid_23 = (q7t1p2_zc+q7t1p3_zc)/2  # mid-point between 2nd and 3rd ESQ 
+
+slits1_x_opening = 7*cm
+slits2_x_opening = 9*cm
+slit_xsize = 8*cm
+slit_ysize = 15*cm
+slit_len = 4*mm
+
+q7t1_slits1_xplus = Box(xsize = slit_xsize, ysize = slit_ysize, zsize = slit_len, xcent = (slits1_x_opening + slit_xsize)/2, ycent = 0, zcent = q7t1_mid_12)
+q7t1_slits1_xminus = Box(xsize = slit_xsize, ysize = slit_ysize, zsize = slit_len, xcent = -(slits1_x_opening + slit_xsize)/2, ycent = 0, zcent = q7t1_mid_12)
+q7t1_slits2_xplus = Box(xsize = slit_xsize, ysize = slit_ysize, zsize = slit_len, xcent = (slits2_x_opening + slit_xsize)/2, ycent = 0, zcent = q7t1_mid_23)
+q7t1_slits2_xminus = Box(xsize = slit_xsize, ysize = slit_ysize, zsize = slit_len, xcent = -(slits2_x_opening + slit_xsize)/2, ycent = 0, zcent = q7t1_mid_23)
+
+q7t1_slits = [q7t1_slits1_xplus,q7t1_slits1_xminus,q7t1_slits2_xplus,q7t1_slits2_xminus]
+
+# Q7 Electrodes
+
+# function returns a list of 4 cylinders that approximate the q7 electrodes
+# required input: center position of the electrode
+
+def q7_electrodes_conductor(zcenter):
+	q7_electrode_len = 200*mm
+	
+	# approximate each electrode by a cylinder
+	cylinder_offset = 170*mm
+	cylinder_radius = 95*mm
+	
+	electrode_xplus = ZCylinder(cylinder_radius, q7_electrode_len, xcent = cylinder_offset, zcent= zcenter)
+	electrode_xminus = ZCylinder(cylinder_radius, q7_electrode_len, xcent = -cylinder_offset, zcent= zcenter)
+	electrode_yplus = ZCylinder(cylinder_radius, q7_electrode_len, ycent = cylinder_offset, zcent= zcenter)
+	electrode_yminus = ZCylinder(cylinder_radius, q7_electrode_len, ycent = -cylinder_offset, zcent= zcenter)
+	
+	return [electrode_xplus, electrode_xminus, electrode_yplus, electrode_yminus]
+
+
+
+
+
+
+#scraper = ParticleScraper([q7t1_endplate_1,q7t1_endplate_2,q7t1_endplate_3,q7t1_endplate_4,q7t1_endplate_5,q7t1_endplate_6])
+
+scraperlist = beampipe + d5p1_aperture + gate_valve + q7t1_endplates + q7t1_slits + q7_electrodes_conductor(q7t1p1_zc) + q7_electrodes_conductor(q7t1p2_zc) + q7_electrodes_conductor(q7t1p3_zc)
+
+scraper = ParticleScraper(scraperlist)
+
+#scraper.registerconductor(scaperlist)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -342,14 +656,16 @@ sp_neut_z = \
 array(
 [ecr_z_extr - 10.*cm, # z to the left of ECR extraction point ... beam should be launched to right  
  gag_zc - 20.90*cm,   # z of neut stop before grated gap, set where 1% of gap E_z field reached 
- gag_zc + 22.28*cm    # z of neut stop after  grated gap, set where 1% of gap E_z field reached
+ gag_zc + 22.28*cm,   # z of neut stop after  grated gap, set where 1% of gap E_z field reached
+ d5p1_ze              # z of where the 1st D5 dipole would ideally end   
 ]    )
 
 sp_neut_frac = \
 array(
 [0.75, 
  0., 
- 0.75
+ 0.75,
+ 0.
 ]    )
 
 neut_z    = {key: sp_neut_z    for key in sp.keys()}
@@ -379,33 +695,33 @@ def rho_neut_f(z,s):
 #     consistent reference potential. 
 #   
 
-r_p_up   = 8.00*cm  # aperture   upstream of grated gap [m]
-r_p_down = 7.62*cm  # aperture downstream of grated gap [m]
+#r_p_up   = 8.00*cm  # aperture   upstream of grated gap [m]
+#r_p_down = 7.62*cm  # aperture downstream of grated gap [m]
 
-r_ap   = array([r_p_up,               gag_rp,       r_p_down  ])
-v_ap   = array([SourceBias+StandBias, StandBias/2., 0.        ]) 
-z_ap_l = array([ecr_z_extr,           gag_col_zs,   gag_col_ze])
-z_ap_u = array([gag_col_zs,           gag_col_ze,   d5p1_zc   ])
+#r_ap   = array([r_p_up,               gag_rp,       r_p_down  ])
+#v_ap   = array([SourceBias+StandBias, StandBias/2., 0.        ]) 
+#z_ap_l = array([ecr_z_extr,           gag_col_zs,   gag_col_ze])
+#z_ap_u = array([gag_col_zs,           gag_col_ze,   d5p1_zc   ])
 
-r_p = max(r_ap)   # Max aperture in simulations 
+#r_p = max(r_ap)   # Max aperture in simulations 
 
-def aperture_r(z):
-  index = sum(where(z/z_ap_l >= 1.,1,0))-1 
-  if index < 0: index = 0
-  # 
-  return(r_ap[index])  
+#def aperture_r(z):
+  #index = sum(where(z/z_ap_l >= 1.,1,0))-1 
+  #if index < 0: index = 0
+  ## 
+  #return(r_ap[index])  
 
-aperture = [] 
-for i in range(len(r_ap)):
-  rp = r_ap[i] 
-  v  = v_ap[i] 
-  zl = z_ap_l[i] 
-  zu = z_ap_u[i]
-  #
-  aperture.append( ZCylinderOut(radius=rp,zlower=zl,zupper=zu,condid="next") )
+#aperture = [] 
+#for i in range(len(r_ap)):
+  #rp = r_ap[i] 
+  #v  = v_ap[i] 
+  #zl = z_ap_l[i] 
+  #zu = z_ap_u[i]
+  ##
+  #aperture.append( ZCylinderOut(radius=rp,zlower=zl,zupper=zu,condid="next") )
 
-# --- Add a circular aperture particle scraper at pipe radius aperture. 
-#       Could also use ParticleScraper(conductors=aperture) but 
-#       setting prwall is faster for a simple cylinder. 
-top.prwall = r_p    # reset this later consistent with actual aperture in range simulated in advances 
+## --- Add a circular aperture particle scraper at pipe radius aperture. 
+##       Could also use ParticleScraper(conductors=aperture) but 
+##       setting prwall is faster for a simple cylinder. 
+#top.prwall = r_p    # reset this later consistent with actual aperture in range simulated in advances 
 
