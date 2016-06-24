@@ -264,27 +264,68 @@ else:
 
 d5p1_zc  = 69.587759   # D5 1: z-center  
 d5p1_str = 1.0         # D5 1: Input field scale factor
-d5p1_typ = "ideal"        # D5 1: type: "ideal" = uniform By, "lin" = linear optics fields, "3d" = 3d field  
+d5p1_typ = "nl"        # D5 1: type: "ideal" = uniform By, "lin" = linear optics fields, "3d" = 3d field  
 
 # --- nonlinear element data 
-fi = PRpickle.PR('lat_d5.3d.20140527.pkl') 
-d5_3d_nx = fi.d5_nx
-d5_3d_ny = fi.d5_ny
-d5_3d_nz = fi.d5_nz
-d5_3d_dx = fi.d5_dx
-d5_3d_dy = fi.d5_dy
-d5_3d_dz = fi.d5_dz
-d5_3d_x_m = fi.d5_x_m
-d5_3d_y_m = fi.d5_y_m
-d5_3d_z_m = fi.d5_z_m
-d5_3d_z_m_cen = fi.d5_z_m_cen
-d5_3d_bx_m = fi.d5_bx_m
-d5_3d_by_m = fi.d5_by_m
-d5_3d_bz_m = fi.d5_bz_m
-fi.close() 
-d5_3d_zlen = d5_3d_z_m.max() - d5_3d_z_m.min()
+if False: # OLD VERSION
+  fi = PRpickle.PR('lat_d5.3d.20140527.pkl') 
+  d5_3d_nx = fi.d5_nx
+  d5_3d_ny = fi.d5_ny
+  d5_3d_nz = fi.d5_nz
+  d5_3d_dx = fi.d5_dx
+  d5_3d_dy = fi.d5_dy
+  d5_3d_dz = fi.d5_dz
+  d5_3d_x_m = fi.d5_x_m
+  d5_3d_y_m = fi.d5_y_m
+  d5_3d_z_m = fi.d5_z_m
+  d5_3d_z_m_cen = fi.d5_z_m_cen
+  d5_3d_bx_m = fi.d5_bx_m
+  d5_3d_by_m = fi.d5_by_m
+  d5_3d_bz_m = fi.d5_bz_m
+  fi.close() 
+  d5_3d_zlen = d5_3d_z_m.max() - d5_3d_z_m.min()
 
-d5_3d_id = addnewbgrddataset(dx=d5_3d_dx,dy=d5_3d_dy,zlength=d5_3d_zlen,bx=d5_3d_bx_m,by=d5_3d_by_m,bz =d5_3d_bz_m) 
+  d5_3d_id = addnewbgrddataset(dx=d5_3d_dx,dy=d5_3d_dy,zlength=d5_3d_zlen,
+                               bx=d5_3d_bx_m,by=d5_3d_by_m,bz =d5_3d_bz_m)
+
+if d5p1_typ == "nl":
+  #Bend magnet grid data info
+  d5_3d_cond_in = 43.0*cm                       # Conductor inner radius
+  d5_3d_cond_out = 84.0*cm                      # Conductor outer radius
+  #d5_3d_x_ap = (d5_3d_cond_out - d5__3dcond_in)/2.0  # x aperture size
+  #d5_3d_y_ap = 5.0*cm                          # y aperture size
+  d5_3d_rc = (d5_3d_cond_out + d5_3d_cond_in)/2.0     # Magnet center radius
+  d5_3d_core_l = d5_3d_rc*0.5*pi                # Magnet core length
+  d5_3d_s = 69.2                                # Magnet core start point
+  d5_3d_e = d5_3d_s + d5_3d_core_l              # Magnet core end point
+
+  d5_3d_frng_l = 53.0*cm                        # Fringe field length
+  d5_3d_xw = 42.0*cm                            # B grid data X width
+  d5_3d_yw = 10.0*cm                            # B grid data Y width
+  d5_3d_zlen = d5_3d_frng_l*2.0 + d5_3d_core_l  # B grid data Z length
+  d5_3d_str = d5_3d_s - d5_3d_frng_l            # B grid data start point
+  d5_3d_end = d5_3d_str+d5_3d_zlen              # B grid data end point
+
+  d5_3d_scl = 0.6015157305571277 * 1.00132179   # B grid scaling factor (center_line_By *correction_factor)
+
+  d5_3d_nx = 105   # Number of X grid
+  d5_3d_ny = 25    # Number of Y grid
+  d5_3d_nz = 500   # Number of Z grid
+
+  d5_3d_dx = d5_3d_xw/float64(d5_3d_nx)     # X grid size
+  d5_3d_dy = d5_3d_yw/float64(d5_3d_ny)     # Y grid size
+  d5_3d_dz = d5_3d_zlen/float64(d5_3d_nz)   # Z grid size
+
+  bgdata = getdatafromtextfile("bend_trans.table",dims=[3,None],)
+  if len(bgdata[0]) != (d5_3d_nx+1)*(d5_3d_ny+1)*(d5_3d_nz+1): raise Exception("bend grid data is invalid.")
+
+  d5_3d_bx = resize(bgdata[0],(d5_3d_nx+1,d5_3d_ny+1,d5_3d_nz+1))*gauss
+  d5_3d_by = resize(bgdata[1],(d5_3d_nx+1,d5_3d_ny+1,d5_3d_nz+1))*gauss
+  d5_3d_bz = resize(bgdata[2],(d5_3d_nx+1,d5_3d_ny+1,d5_3d_nz+1))*gauss
+
+  d5_3d_id = addnewbgrddataset(dx=d5_3d_dx ,dy=d5_3d_dx ,zlength=d5_3d_zlen ,bx=d5_3d_bx, by=d5_3d_by ,bz=d5_3d_bz)
+
+
 
 # Starting and ending position of first ideal D5 dipole.
 # Also used to define the lattice bend
@@ -312,8 +353,15 @@ elif d5p1_typ == "lin":
   d5p1 = None
 # --- 3D field from magnet design code
 elif d5p1_typ == "nl":
-  d5p1 = addnewbgrd(dx=d5_3d_dx,dy=d5_3d_dy,xs=d5_3d_x_m.min(),ys=d5_3d_y_m.min(),
-    zs=d5p1_zc-d5_3d_zlen/2.,ze=d5p1_zc+d5_3d_zlen/2.,id=d5_3d_id,sc=d5p1_str)
+  #d5p1 = addnewbgrd(dx=d5_3d_dx,dy=d5_3d_dy,xs=d5_3d_x_m.min(),ys=d5_3d_y_m.min(),
+  #  zs=d5p1_zc-d5_3d_zlen/2.,ze=d5p1_zc+d5_3d_zlen/2.,id=d5_3d_id,sc=d5p1_str)
+
+  d5p1_zs = d5_3d_s
+  d5p1_ze = d5_3d_e
+
+  d5p1 = addnewbgrd(dx=d5_3d_dx, dy=d5_3d_dy, xs=-d5_3d_xw/2., ys=-d5_3d_yw/2.,
+    zs=d5_3d_str, ze=d5_3d_end, id=d5_3d_id, sc=d5_3d_scl)
+
 else:
   print("Warning: No D5 1st Dipole Applied Fields Defined") 
   d5p1 = None
