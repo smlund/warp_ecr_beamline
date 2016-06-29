@@ -17,6 +17,13 @@ Michigan State University
 wong@nscl.msu.edu
 517-908-7465
 
+Kei Fukushima
+Facility for Rare Isotope Beams
+Michigan State University
+fukushim@frib.msu.edu
+517-908-7254
+
+
 To initialize the repository, 
 
    % git clone https://github.com/smlund/warp_ion_frontend
@@ -42,5 +49,24 @@ To remove a file from git control (to not include in future pulls), use
 
 The local copy of the file removed can be retained on disk by using 
 
-  # git rm --cached file 
+  % git rm --cached file 
+
+Field files needed for the lattices described by the simulation are stored
+in the Dropbox file sharing system. Code users do NOT need dropbox access
+to retrieve the needed field description files for lattice elements.
+A unix shell script "frib-lat-fields-dropbox-fetch" is provided that
+employs wget with dropbox links to download the needed field element
+description files in various lat_element_name subdirectories
+     e.g.  lat_ecr_venus   Venus source 
+	   lat_s4          s4 solenoid 
+	   lat_gag         grated acceleration gap
+	   ...
+Run this executable script using:
+ % ./frib-lat-fields-dropbox-fetch
+
+This script and the linked Dropbox account must be maintained consistently
+as lattice element descriptions change. Code users may want access to the
+Dropbox account which contains much info/input on the generation of lattice
+element descriptions. Contact Steve Lund for access.
+
 
