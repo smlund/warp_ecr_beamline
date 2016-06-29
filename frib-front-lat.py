@@ -31,8 +31,8 @@ ecr_sc     = 1.0                    # scale factor to muliply field data by
 ecr_typ    = "lin"                  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field  
 
 # --- linear element data  
-#fi = PRpickle.PR("lat_ecr_venus.lin.20140602.pkl")  old data file which does not include fringe field extension
-fi = PRpickle.PR("ecr_venus/lat_ecr_venus.lin.20160218.pkl")
+#fi = PRpickle.PR("lat_ecr_venus/lat_ecr_venus.lin.20140602.pkl")  old data file which does not include fringe field extension
+fi = PRpickle.PR("lat_ecr_venus/lat_ecr_venus.lin.20160218.pkl")
 ecr_bz_extr = fi.ecr_venus_bz_extr
 ecr_dz = fi.ecr_venus_dz 
 ecr_nz = fi.ecr_venus_nz  
@@ -74,8 +74,8 @@ s4p2_str = 0.5 # 0.617 # s4 2: peak on-axis B_z field strength [Tesla]
 s4p2_typ = "nl"        # S4 1: type: "lin" = linear optics fields or "nl" = nonlinear r-z field  
 
 # --- linear element data  
-#fi = PRpickle.PR("lat_s4.lin.20140603.pkl")
-fi = PRpickle.PR("lat_s4.lin.20141031.pkl")
+#fi = PRpickle.PR("lat_s4/lat_s4.lin.20140603.pkl")
+fi = PRpickle.PR("lat_s4/lat_s4.lin.20141031.pkl")
 s4_dz  = fi.s4_dz 
 s4_nz  = fi.s4_nz  
 s4_z_m = fi.s4_z_m 
@@ -87,8 +87,8 @@ s4_zlen = s4_z_m.max() - s4_z_m.min()
 s4_lin_id = addnewmmltdataset(zlen=s4_zlen,ms=s4_bz0_m,msp=s4_bz0p_m,nn=0,vv=0)
 
 # --- nonlinear element field data 
-#fi = PRpickle.PR('lat_s4.rz.20140603.pkl') 
-fi = PRpickle.PR('lat_s4.rz.20141031.pkl') 
+#fi = PRpickle.PR('lat_s4/lat_s4.rz.20140603.pkl') 
+fi = PRpickle.PR('lat_s4/lat_s4.rz.20141031.pkl') 
 #
 s4_len_coil   = fi.s4_len_coil 
 s4_len_magnet = fi.s4_len_magnet 
@@ -104,8 +104,8 @@ s4_bz_m_in = fi.s4_bz_m
 fi.close() 
 
 # --- nonlinear element vector potential data 
-#fi = PRpickle.PR('lat_s4.at.20140603.pkl') 
-fi = PRpickle.PR('lat_s4.at.20141031.pkl') 
+#fi = PRpickle.PR('lat_s4/lat_s4.at.20140603.pkl') 
+fi = PRpickle.PR('lat_s4/lat_s4.at.20141031.pkl') 
 #
 if fi.s4_nz != s4_nz: raise Exception("S4: Nonlin Vector potential model nz not equal to nonlinear/linear model nz")
 if fi.s4_nr != s4_nr: raise Exception("S4: Nonlin Vector potential model nr not equal to nonlinear model nr")
@@ -192,8 +192,8 @@ gag_zc  = 67.811564  # Grated Accel Gap: z-center
 gag_typ = "nl"       # Grated Accel Gap: type: "ideal" = Short gap kick, "lin" = linear r-z field imported, "nl" = nonlinear r-z field imported   
 
 # --- linear element data  
-# fi = PRpickle.PR("lat_gag.lin.20140624.pkl")  # Original Warp model with simplified geometry  
-fi = PRpickle.PR("lat_gag.lin.20141029.pkl")    # Poisson model with high detail 
+# fi = PRpickle.PR("lat_gag/lat_gag.lin.20140624.pkl")  # Original Warp model with simplified geometry  
+fi = PRpickle.PR("lat_gag/lat_gag.lin.20141029.pkl")    # Poisson model with high detail 
 gag_dz = fi.gag_dz0 
 gag_nz = fi.gag_nz0  
 gag_z_m     = fi.gag_z0_m  
@@ -206,8 +206,8 @@ gag_zlen = gag_z_m.max() - gag_z_m.min()
 gag_lin_id = addnewemltdataset(zlen=gag_zlen,es=gag_ez0_m,esp=gag_ez0p_m,nn=0,vv=0)
 
 # --- nonlinear element data
-#fi = PRpickle.PR('lat_gag.rz.20140624.pkl')  # Original Warp model with simplified geometry  
-fi = PRpickle.PR('lat_gag.rz.20141029.pkl')   # Poisson model with high detail 
+#fi = PRpickle.PR('lat_gag/lat_gag.rz.20140624.pkl')  # Original Warp model with simplified geometry  
+fi = PRpickle.PR('lat_gag/lat_gag.rz.20141029.pkl')   # Poisson model with high detail 
 if fi.gag_nz != gag_nz: raise Exception("GAG: Nonlinear and linear field model nz not equal") 
 gag_nr = fi.gag_nr
 gag_dr = fi.gag_dr
@@ -268,7 +268,7 @@ d5p1_typ = "nl"        # D5 1: type: "ideal" = uniform By, "lin" = linear optics
 
 # --- nonlinear element data 
 if False: # OLD VERSION
-  fi = PRpickle.PR('lat_d5.3d.20140527.pkl') 
+  fi = PRpickle.PR('lat_d5/lat_d5.3d.20140527.pkl') 
   d5_3d_nx = fi.d5_nx
   d5_3d_ny = fi.d5_ny
   d5_3d_nz = fi.d5_nz
@@ -441,8 +441,8 @@ q7t1p3_sign = 1    # +1 for x_quad, -1 for y_quad
 q7t1p3_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field  
 
 ## --- linear element data  
-##fi = PRpickle.PR("lat_s4.lin.20140603.pkl")
-#fi = PRpickle.PR("lat_s4.lin.20141031.pkl")
+##fi = PRpickle.PR("lat_q7/lat_q7.lin.????.pkl")
+#fi = PRpickle.PR("lat_q7/lat_q7.lin.????.pkl")
 #s4_dz  = fi.s4_dz 
 #s4_nz  = fi.s4_nz  
 #s4_z_m = fi.s4_z_m 
@@ -454,8 +454,7 @@ q7t1p3_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z 
 #s4_lin_id = addnewmmltdataset(zlen=s4_zlen,ms=s4_bz0_m,msp=s4_bz0p_m,nn=0,vv=0)
 
 # --- nonlinear element field data 
-#fi = PRpickle.PR('lat_s4.rz.20140603.pkl') 
-fi = PRpickle.PR('lat_q7.3d.20160607.pkl') 
+fi = PRpickle.PR('lat_q7/lat_q7.3d.20160607.pkl') 
 ##
 #s4_len_coil   = fi.s4_len_coil 
 #s4_len_magnet = fi.s4_len_magnet 
@@ -481,21 +480,6 @@ fi.close()
 q7_zlen = q7_z_m.max() - q7_z_m.min()
 q7_x_m_min = q7_x_m.min()
 q7_y_m_min = q7_y_m.min()
-
-## --- nonlinear element vector potential data 
-##fi = PRpickle.PR('lat_s4.at.20140603.pkl') 
-#fi = PRpickle.PR('lat_s4.at.20141031.pkl') 
-##
-#if fi.s4_nz != s4_nz: raise Exception("S4: Nonlin Vector potential model nz not equal to nonlinear/linear model nz")
-#if fi.s4_nr != s4_nr: raise Exception("S4: Nonlin Vector potential model nr not equal to nonlinear model nr")
-#s4_at_m  = fi.s4_at_m
-#fi.close() 
-
-## --- Axisymmetric b-field arrays must be 3d shape (nr+1,arb,nz+1) to load into Warp  
-#s4_br_m = fzeros((s4_nr+1,1,s4_nz+1))  
-#s4_br_m[:,0,:] = s4_br_m_in
-#s4_bz_m = fzeros((s4_nr+1,1,s4_nz+1))
-#s4_bz_m[:,0,:] = s4_bz_m_in
 
 q7_nl_id = addnewegrddataset(dx=q7_dx,dy=q7_dy,zlength=q7_zlen,ex=q7_ex_m,ey=q7_ey_m,ez=q7_ez_m)  # pass arb dy to avoid error trap  
 
