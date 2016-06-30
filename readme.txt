@@ -45,11 +45,18 @@ me if you want to contribute and I will add you)
 
 To remove a file from git control (to not include in future pulls), use 
 
-  % git rm file 
+  % git rm file
+  % git commit -m "SML: removing file from repo"
+  % git push 
 
-The local copy of the file removed can be retained on disk by using 
+The local copy of the file removed can be retained on disk by subsituting
+
 
   % git rm --cached file 
+
+in the above.  Another way to remove a file from the master node repo is to
+go to the github web side, click on a file, click the delete button and then
+confirm at the bottom of the page.   
 
 Field files needed for the lattices described by the simulation are stored
 in the Dropbox file sharing system. Code users do NOT need dropbox access
@@ -67,6 +74,7 @@ Run this executable script using:
 This script and the linked Dropbox account must be maintained consistently
 as lattice element descriptions change. Code users may want access to the
 Dropbox account which contains much info/input on the generation of lattice
-element descriptions. Contact Steve Lund for access.
+element field files, code input (Poisson, CST Studio, ...), element plots,
+etc. Contact Steve Lund for access.
 
 
