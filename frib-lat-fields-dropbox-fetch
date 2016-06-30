@@ -4,43 +4,37 @@
 #
 # See information in Dropbox for the field element descriptions and data sets.   
 
-# make various lattice element directories if not present to store field element data
-% mkdir -p lat_d5 lat_ecr_venus lat_gag lat_q7 lat_s4 
+# Make various lattice element directories if not present to store field element data
+mkdir -p lat_d5 lat_ecr_venus lat_gag lat_q7 lat_s4 
 
-# make scratch directory to retrieve field files to 
-mkdir -p lat_fields_tmp
-cd lat_fields_tmp 
-
-# fetch lattice field files from Dropbox repo
+# Fetch lattice field files from Dropbox repo in the relevant directories.  Note that -nc for no clobber option 
+# is being used. I don't understand why, but the dropbox time stamp of the file is not transmitted correctly 
+# (always present system time).  nc appears to be wrt name.  So if the same file name (date in name) is retransmitted, 
+# this may cause a problem. Unsure how to fix this. But -nc makes fast if file is there (gets skipped).  
 # -- d5 dipole
-wget -p --no-check-cert https://www.dropbox.com/s/ijs2s6jnux3fzzi/bend_trans.table
-wget -p --no-check-cert https://www.dropbox.com/s/824irj3jwvm94fb/lat_d5.3d.20140527.pkl
+cd lat_d5 
+wget -nc https://www.dropbox.com/s/ijs2s6jnux3fzzi/bend_trans.table
+wget -nc https://www.dropbox.com/s/824irj3jwvm94fb/lat_d5.3d.20140527.pkl
+cd .. 
 # -- ecr venus 
-wget -p --no-check-cert https://www.dropbox.com/s/5x7zyex1q5552xs/lat_ecr_venus.lin.20140602.pkl
-wget -p --no-check-cert https://www.dropbox.com/s/2pjh15etmt5ky87/lat_ecr_venus.lin.20160218.pkl
-# -- grated acceleration gap 
-wget --no-check-cert https://www.dropbox.com/s/rwppvhlmtc38n3y/lat_gag.lin.20141029.pkl
-wget -p --no-check-cert https://www.dropbox.com/s/42fgtl05y8u9uco/lat_gag.rz.20141029.pkl
-# -- q7 quadrupole 
-wget -p --no-check-cert https://www.dropbox.com/s/xs5cqttfmbq1nee/lat_q7.3d.20160607.pkl
-# -- s4 solenoid 
-wget -p --no-check-cert https://www.dropbox.com/s/fj4zjqsa2v6gsca/lat_s4.at.20141031.pkl
-wget -p --no-check-cert https://www.dropbox.com/s/i7setjqpgozrars/lat_s4.lin.20141031.pkl
-wget -p --no-check-cert https://www.dropbox.com/s/itliy3ev8zxd84r/lat_s4.rz.20141031.pkl
-
-# copy field fields if they have changed from temp directory to working directories
-# -- d5 dipole 
-rsync -avzh bend_trans.table lat_d5.*.pkl ../lat_d5
-# -- ecr venus
-rsync -avzh lat_ecr_venus.*.pkl ../lat_ecr_venus
-# -- grated acceleration gap
-rsync -avzh lat_gag.*.pkl ../lat_gag
-# -- q7 quadrupole
-rsync -avzh lat_q7.*.pkl ../lat_q7
-# -- s4 solenoid
-rsync -avzh lat_s4.*.pkl ../lat_s4
-
-# remove temp scratch directory
+cd lat_ecr_venus 
+wget -nc https://www.dropbox.com/s/5x7zyex1q5552xs/lat_ecr_venus.lin.20140602.pkl
+wget -nc https://www.dropbox.com/s/2pjh15etmt5ky87/lat_ecr_venus.lin.20160218.pkl
 cd ..
-/bin/rm -R lat_fields_tmp
+# -- grated acceleration gap 
+cd lat_gag 
+wget -nc https://www.dropbox.com/s/rwppvhlmtc38n3y/lat_gag.lin.20141029.pkl
+wget -nc https://www.dropbox.com/s/42fgtl05y8u9uco/lat_gag.rz.20141029.pkl
+cd .. 
+# -- q7 quadrupole 
+cd lat_q7 
+wget -nc https://www.dropbox.com/s/xs5cqttfmbq1nee/lat_q7.3d.20160607.pkl
+cd .. 
+# -- s4 solenoid 
+cd lat_s4 
+wget -nc https://www.dropbox.com/s/fj4zjqsa2v6gsca/lat_s4.at.20141031.pkl
+wget -nc https://www.dropbox.com/s/i7setjqpgozrars/lat_s4.lin.20141031.pkl
+wget -nc https://www.dropbox.com/s/itliy3ev8zxd84r/lat_s4.rz.20141031.pkl
+cd ..
+
 
