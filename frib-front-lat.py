@@ -316,7 +316,7 @@ if d5p1_typ == "nl":
   d5_3d_dy = d5_3d_yw/float64(d5_3d_ny)     # Y grid size
   d5_3d_dz = d5_3d_zlen/float64(d5_3d_nz)   # Z grid size
 
-  bgdata = getdatafromtextfile("bend_trans.table",dims=[3,None],)
+  bgdata = getdatafromtextfile("lat_d5/bend_trans.table",dims=[3,None],)
   if len(bgdata[0]) != (d5_3d_nx+1)*(d5_3d_ny+1)*(d5_3d_nz+1): raise Exception("bend grid data is invalid.")
 
   d5_3d_bx = resize(bgdata[0],(d5_3d_nx+1,d5_3d_ny+1,d5_3d_nz+1))*gauss
