@@ -55,7 +55,7 @@ from scipy.integrate import odeint
 
 # Make time array for solution based on advance range and step size
 
-stepnum = int(round((env_ze - env_zs)/env_ds))
+stepnum = int(round((env_ze - env_zs)/hl_dz))
 
 sss = linspace(env_zs, env_ze, stepnum)
 
