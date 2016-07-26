@@ -47,7 +47,7 @@ if s4p1_typ == "nl":
 	ptitles("NL S4 Solenoid Data: Scaled on-axis Bz vs z","z [m]","Bz [1]",)
 	fma()
 	
-	plotbgrd(ib=gag[0],component='x',ix=s4_nr/2,iy=0,titles=false)
+	plotbgrd(ib=s4_nl_id,component='x',ix=s4_nr/2,iy=0,titles=false)
 	ptitles("NL S4 Solenoid Data: Scaled Br vs z at r = %s mm"%(s4_r_m[s4_nr/2]/mm),"z [m]","Br [1]",)
 	fma()
 
