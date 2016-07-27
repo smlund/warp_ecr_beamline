@@ -421,22 +421,41 @@ for ii in sp_target:
 # Q7 Electrostatic Quads
 # Comment: linear and nonlinear variants must have same z-grid. 
 
+# --- calculate esq strength from k1 in DIMAD lattice design
+# values used in Dr. Ren's model: 4.6kV, -8.3kV, 3.7kV
+
+amu_eV = 931.4941e6
+
+q7t1p1_k1 = 8.2957122
+q7t1p2_k1 = -15.6040684
+q7t1p3_k1 = 7.51275015
+
+q7_aper_r = 7.5*cm
+
+gamma_ref = (ekin_per_u + amu_eV) / amu_eV
+v_ref = sqrt(1. - 1./gamma_ref**2)*clight
+brho_ref = (A_ref * sqrt((ekin_per_u + amu_eV)**2 - (amu_eV)**2)/clight) / Q_ref
+
+q7t1p1_str = abs(q7t1p1_k1)*brho_ref*v_ref*q7_aper_r**2/2
+q7t1p2_str = abs(q7t1p2_k1)*brho_ref*v_ref*q7_aper_r**2/2
+q7t1p3_str = abs(q7t1p3_k1)*brho_ref*v_ref*q7_aper_r**2/2
+
 # --- element specification 
 
 q7t1p1_zc = 70.537759 # (q7: Q7 device type; t1: 1st triplet; p1: part 1)
-q7t1p1_str = 10000 # [V]
+#q7t1p1_str = 10000 # [V]
 q7t1p1_sign = 1    # +1 for x_quad, -1 for y_quad
 q7t1p1_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field
 
 inter_quad_distance = 0.335 # centroid distance between two quads in a triplet
 
 q7t1p2_zc = q7t1p1_zc + inter_quad_distance
-q7t1p2_str = 10000 # [V]
+#q7t1p2_str = 10000 # [V]
 q7t1p2_sign = -1   # +1 for x_quad, -1 for y_quad
 q7t1p2_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field
 
 q7t1p3_zc = q7t1p2_zc + inter_quad_distance
-q7t1p3_str = 10000 # [V]
+#q7t1p3_str = 10000 # [V]
 q7t1p3_sign = 1    # +1 for x_quad, -1 for y_quad
 q7t1p3_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field  
 
