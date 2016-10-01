@@ -259,7 +259,8 @@ else:
 
 
 
-
+IdealCSS = True # if true, all positions in CSS are defined relative to 1st D5 in accordance with DIMAD design
+                # idealCSS involves repositioning of the elements in additional to using ideal elements
 
 # D5 Bending Dipole 
 
@@ -270,7 +271,9 @@ d5p1_str = 1.0         # D5 1: Input field scale factor
 d5p1_typ = "nl"        # D5 1: type: "ideal" = uniform By, "lin" = linear optics fields, "3d" = 3d field  
 d5p1_ideal_len = 1.0
 
-d5p2_zc  = d5p1_zc + 4.2   # D5 2: z-center  
+d5p2_zc  = 73.781896   # D5 2: z-center  
+if IdealCSS == True:
+	d5p2_zc = d5p1_zc + 4.2
 d5p2_str = 1.0         # D5 2: Input field scale factor
 d5p2_typ = "nl"        # D5 2: type: "ideal" = uniform By, "lin" = linear optics fields, "3d" = 3d field
 d5p2_ideal_len = 1.0
@@ -344,10 +347,6 @@ if d5p1_typ == "nl":
 
 # Define starting and ending position of 1st ideal D5 dipole using ideal length and centre position
 # Makes the bend less tight than when the starting position is set to be 69.2 m
-
-d5p1_ideal_len = 1.0
-d5p1_zs = d5p1_zc - d5p1_ideal_len / 2
-d5p1_ze = d5p1_zc + d5p1_ideal_len / 2
 
 # --- define dipole d5 
 
@@ -485,6 +484,10 @@ q7_design_len = 0.2068
 
 q7_aper_r = 7.5*cm
 
+#gamma_ref = (ekin_per_u + amu_eV) / amu_eV
+#v_ref = sqrt(1. - 1./gamma_ref**2)*clight
+#brho_ref = (A_ref * sqrt((ekin_per_u + amu_eV)**2 - (amu_eV)**2)/clight) / Q_ref
+
 q7_str_mode = 1    # 0: electrode potential corresponds to kappa ; 1: equivalent focusing
                    # must be 0 for ideal q7
 
@@ -493,8 +496,9 @@ inter_quad_distance = 0.335 # centroid distance between two quads in a triplet
 # --- element specification 
 
 ## 1st triplet
-q7t1p1_zc = d5p1_zc + 0.95 # (q7: Q7 device type; t1: 1st triplet; p1: part 1)
-#q7t1p1_zc = 70.537759 # (q7: Q7 device type; t1: 1st triplet; p1: part 1)
+q7t1p1_zc = 70.537759 # (q7: Q7 device type; t1: 1st triplet; p1: part 1)
+if IdealCSS == True:
+	q7t1p1_zc = d5p1_zc + 0.95
 #q7t1p1_str = 10000 # [V]
 q7t1p1_sign = 1    # +1 for x_quad, -1 for y_quad
 q7t1p1_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field
@@ -510,8 +514,9 @@ q7t1p3_sign = 1    # +1 for x_quad, -1 for y_quad
 q7t1p3_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field  
 
 ## 2nd triplet
-q7t2p1_zc = d5p1_zc + 2.58 # (q7: Q7 device type; t2: 2nd triplet; p1: part 1)
-#q7t2p1_zc = 72.161896 # (q7: Q7 device type; t2: 2nd triplet; p1: part 1)
+q7t2p1_zc = 72.161896 # (q7: Q7 device type; t2: 2nd triplet; p1: part 1)
+if IdealCSS == True:
+	q7t2p1_zc = d5p1_zc + 2.58
 #q7t1p1_str = 10000 # [V]
 q7t2p1_sign = 1    # +1 for x_quad, -1 for y_quad
 q7t2p1_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field
@@ -603,8 +608,8 @@ if q7t1p1_typ == "lin":
   q7t1p1 = addnewmmlt(zs=q7t1p1_zc-q7_zlen/2.,ze=q7t1p1_zc+q7_zlen/2.,id=q7_lin_id,sc=q7t1p1_str*q7t1p1_sign) 
 elif q7t1p1_typ == "nl":
   q7t1p1 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t1p1_zc-q7_zlen/2.,ze=q7t1p1_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t1p1_str*q7t1p1_sign)
-elif q7t1p1_typ == "ideal":
-  q7t1p1 = addnewquad(zs = q7t1p1_zc-q7_design_len/2., ze = q7t1p1_zc+q7_design_len/2., de = q7t1p1_str*q7t1p1_sign)
+elif q7t1p1_typ == "ideal":   # additional -ve sign in de because dEx/dx should be -ve for focusing in x
+  q7t1p1 = addnewquad(zs = q7t1p1_zc-q7_design_len/2., ze = q7t1p1_zc+q7_design_len/2., de = -q7t1p1_str*q7t1p1_sign)
 else:
   print("Warning: No S4 1st Solenoid Applied Fields Defined") 
   q7t1p1 = None
@@ -615,7 +620,7 @@ if q7t1p2_typ == "lin":
 elif q7t1p2_typ == "nl":
   q7t1p2 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t1p2_zc-q7_zlen/2.,ze=q7t1p2_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t1p2_str*q7t1p2_sign) 
 elif q7t1p2_typ == "ideal":
-  q7t1p2 = addnewquad(zs = q7t1p2_zc-q7_design_len/2., ze = q7t1p2_zc+q7_design_len/2., de = q7t1p2_str*q7t1p2_sign)
+  q7t1p2 = addnewquad(zs = q7t1p2_zc-q7_design_len/2., ze = q7t1p2_zc+q7_design_len/2., de = -q7t1p2_str*q7t1p2_sign)
 else:
   print("Warning: No S4 1st Solenoid Applied Fields Defined") 
   q7t1p2 = None
@@ -626,7 +631,7 @@ if q7t1p3_typ == "lin":
 elif q7t1p3_typ == "nl":
   q7t1p3 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t1p3_zc-q7_zlen/2.,ze=q7t1p3_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t1p3_str*q7t1p3_sign)
 elif q7t1p3_typ == "ideal":
-  q7t1p3 = addnewquad(zs = q7t1p3_zc-q7_design_len/2., ze = q7t1p3_zc+q7_design_len/2., de = q7t1p3_str*q7t1p3_sign) 
+  q7t1p3 = addnewquad(zs = q7t1p3_zc-q7_design_len/2., ze = q7t1p3_zc+q7_design_len/2., de = -q7t1p3_str*q7t1p3_sign) 
 else:
   print("Warning: No S4 1st Solenoid Applied Fields Defined") 
   q7t1p3 = None
@@ -637,7 +642,7 @@ if q7t2p1_typ == "lin":
 elif q7t2p1_typ == "nl":
   q7t2p1 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t2p1_zc-q7_zlen/2.,ze=q7t2p1_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t2p1_str*q7t2p1_sign)
 elif q7t2p1_typ == "ideal":
-  q7t2p1 = addnewquad(zs = q7t2p1_zc-q7_design_len/2., ze = q7t2p1_zc+q7_design_len/2., de = q7t2p1_str*q7t2p1_sign) 
+  q7t2p1 = addnewquad(zs = q7t2p1_zc-q7_design_len/2., ze = q7t2p1_zc+q7_design_len/2., de = -q7t2p1_str*q7t2p1_sign) 
 else:
   print("Warning: No S4 1st Solenoid Applied Fields Defined") 
   q7t2p1 = None
@@ -648,7 +653,7 @@ if q7t2p2_typ == "lin":
 elif q7t2p2_typ == "nl":
   q7t2p2 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t2p2_zc-q7_zlen/2.,ze=q7t2p2_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t2p2_str*q7t2p2_sign)
 elif q7t2p2_typ == "ideal":
-  q7t2p2 = addnewquad(zs = q7t2p2_zc-q7_design_len/2., ze = q7t2p2_zc+q7_design_len/2., de = q7t2p2_str*q7t2p2_sign)  
+  q7t2p2 = addnewquad(zs = q7t2p2_zc-q7_design_len/2., ze = q7t2p2_zc+q7_design_len/2., de = -q7t2p2_str*q7t2p2_sign)  
 else:
   print("Warning: No S4 1st Solenoid Applied Fields Defined") 
   q7t2p2 = None
@@ -659,12 +664,10 @@ if q7t2p3_typ == "lin":
 elif q7t2p3_typ == "nl":
   q7t2p3 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t2p3_zc-q7_zlen/2.,ze=q7t2p3_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t2p3_str*q7t2p3_sign) 
 elif q7t2p3_typ == "ideal":
-  q7t2p3 = addnewquad(zs = q7t2p3_zc-q7_design_len/2., ze = q7t2p3_zc+q7_design_len/2., de = q7t2p3_str*q7t2p3_sign)  
+  q7t2p3 = addnewquad(zs = q7t2p3_zc-q7_design_len/2., ze = q7t2p3_zc+q7_design_len/2., de = -q7t2p3_str*q7t2p3_sign)  
 else:
   print("Warning: No S4 1st Solenoid Applied Fields Defined") 
   q7t2p3 = None
-
-
 
 
 ### Scrapers ###
@@ -690,7 +693,7 @@ q7t1_pipe_ze = q7t1_pipe_zs + 952*mm
 r_ap   = array([r_p_up,               gag_rp,       r_p_down,   post_d5p1_pipe_r,     12.4*cm,       7.5*cm  ])
 v_ap   = array([SourceBias+StandBias, StandBias/2., 0.,         0.,                   0.,            0.]) 
 z_ap_l = array([ecr_z_extr,           gag_col_zs,   gag_col_ze, post_d5p1_pipe_zs,    q7t1_pipe_zs,  q7t1_pipe_ze])
-z_ap_u = array([gag_col_zs,           gag_col_ze,   d5p1_zs,    post_d5p1_pipe_ze,    q7t1_pipe_ze,  q7t1_pipe_ze + 300*mm])
+z_ap_u = array([gag_col_zs,           gag_col_ze,   d5p1_zs,    post_d5p1_pipe_ze,    q7t1_pipe_ze,  d5p2_ze + 0.4])
 
 beampipe = [] 
 for i in range(len(r_ap)):
