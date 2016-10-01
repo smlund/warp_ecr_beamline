@@ -19,6 +19,9 @@ ekin_per_u = 12.*keV                             # target kinetic energy/u for L
 StandBias  = A_ref*ekin_per_u/Q_ref - SourceBias # Conistent Bias of Injector Column
 Bias       = StandBias + SourceBias              # Total bias to achieve ekin_per_u 
 
+ref_gamma_post_gap = 1. + ekin_per_u*jperev/(amu*clight**2)
+ref_vel_post_gap = clight*sqrt(1. - 1./ref_gamma_post_gap**2)
+ref_brho_post_gap = ref_gamma_post_gap*ref_vel_post_gap*A_ref*amu/(Q_ref*jperev)
 
 # Venus ECR Source Fields 
 # Comment: Must have same z-grids for linear and nonlinear forms. 
@@ -265,6 +268,12 @@ else:
 d5p1_zc  = 69.587759   # D5 1: z-center  
 d5p1_str = 1.0         # D5 1: Input field scale factor
 d5p1_typ = "nl"        # D5 1: type: "ideal" = uniform By, "lin" = linear optics fields, "3d" = 3d field  
+d5p1_ideal_len = 1.0
+
+d5p2_zc  = d5p1_zc + 4.2   # D5 2: z-center  
+d5p2_str = 1.0         # D5 2: Input field scale factor
+d5p2_typ = "nl"        # D5 2: type: "ideal" = uniform By, "lin" = linear optics fields, "3d" = 3d field
+d5p2_ideal_len = 1.0
 
 # --- nonlinear element data 
 if False: # OLD VERSION
@@ -343,10 +352,14 @@ d5p1_ze = d5p1_zc + d5p1_ideal_len / 2
 # --- define dipole d5 
 
 # --- ideal (uniform) field 
-if d5p1_typ == "ideal": 
+if d5p1_typ == "ideal":
+  d5p1_zs = d5p1_zc - d5p1_ideal_len / 2.
+  d5p1_ze = d5p1_zc + d5p1_ideal_len / 2.
   bending_R = (d5p1_ze - d5p1_zs)/(pi/2.)
   bending_B = sqrt( A_ref*ekin_per_u*jperev*2.*A_ref*amu)/(Q_ref*jperev)/bending_R
   d5p1 = addnewdipo(zs = d5p1_zs, ze = d5p1_ze, by = bending_B)
+  equivalent_G = 0.9/bending_R**2 * ref_brho_post_gap	#focusing effect from slanted poles
+  d5p1_equiv_quad = addnewquad(zs = d5p1_zs, ze = d5p1_ze, db = -equivalent_G)
 # --- linear optic approximation field 
 elif d5p1_typ == "lin":
   print("Warning: No D5 1st Dipole Linear Applied Fields Defined")
@@ -356,16 +369,47 @@ elif d5p1_typ == "nl":
   #d5p1 = addnewbgrd(dx=d5_3d_dx,dy=d5_3d_dy,xs=d5_3d_x_m.min(),ys=d5_3d_y_m.min(),
   #  zs=d5p1_zc-d5_3d_zlen/2.,ze=d5p1_zc+d5_3d_zlen/2.,id=d5_3d_id,sc=d5p1_str)
 
-  d5p1_zs = d5_3d_s
-  d5p1_ze = d5_3d_e
+  d5p1_zs = d5p1_zc - d5_3d_core_l/2. # core starts
+  d5p1_ze = d5p1_zc + d5_3d_core_l/2. # core ends
+  d5p1_str = d5p1_zs - d5_3d_frng_l   # fringe starts
+  d5p1_end = d5p1_ze + d5_3d_frng_l   # fringe ends
 
   d5p1 = addnewbgrd(dx=d5_3d_dx, dy=d5_3d_dy, xs=-d5_3d_xw/2., ys=-d5_3d_yw/2.,
-    zs=d5_3d_str, ze=d5_3d_end, id=d5_3d_id, sc=d5_3d_scl)
+    zs=d5p1_str, ze=d5p1_end, id=d5_3d_id, sc=d5_3d_scl)
 
 else:
   print("Warning: No D5 1st Dipole Applied Fields Defined") 
   d5p1 = None
 
+# --- ideal (uniform) field 
+if d5p2_typ == "ideal": 
+  d5p2_zs = d5p2_zc - d5p2_ideal_len / 2.
+  d5p2_ze = d5p2_zc + d5p2_ideal_len / 2.
+  bending_R = (d5p2_ze - d5p2_zs)/(pi/2.)
+  bending_B = sqrt( A_ref*ekin_per_u*jperev*2.*A_ref*amu)/(Q_ref*jperev)/bending_R
+  d5p2 = addnewdipo(zs = d5p2_zs, ze = d5p2_ze, by = bending_B)
+  equivalent_G = 0.9/bending_R**2 * ref_brho_post_gap	#focusing effect from slanted poles
+  d5p2_equiv_quad = addnewquad(zs = d5p2_zs, ze = d5p2_ze, db = -equivalent_G)
+# --- linear optic approximation field 
+elif d5p2_typ == "lin":
+  print("Warning: No D5 2nd Dipole Linear Applied Fields Defined")
+  d5p2 = None
+# --- 3D field from magnet design code
+elif d5p2_typ == "nl":
+  #d5p1 = addnewbgrd(dx=d5_3d_dx,dy=d5_3d_dy,xs=d5_3d_x_m.min(),ys=d5_3d_y_m.min(),
+  #  zs=d5p1_zc-d5_3d_zlen/2.,ze=d5p1_zc+d5_3d_zlen/2.,id=d5_3d_id,sc=d5p1_str)
+
+  d5p2_zs = d5p2_zc - d5_3d_core_l/2.  # core starts
+  d5p2_ze = d5p2_zc + d5_3d_core_l/2.  # core ends
+  d5p2_str = d5p2_zs - d5_3d_frng_l    # fringe starts
+  d5p2_end = d5p2_ze + d5_3d_frng_l    # fringe ends
+  
+  d5p2 = addnewbgrd(dx=d5_3d_dx, dy=d5_3d_dy, xs=-d5_3d_xw/2., ys=-d5_3d_yw/2.,
+    zs=d5p2_str, ze=d5p2_end, id=d5_3d_id, sc=d5_3d_scl)
+
+else:
+  print("Warning: No D5 2nd Dipole Applied Fields Defined") 
+  d5p2 = None
 
 #
 # Lattice bends for D5 Bending Dipole 
@@ -374,6 +418,7 @@ else:
 #   * Use ideal bends on lattice whether dipole field is ideal (uniform) or not.   
 
 d5p1_bend = True  # True or False: Add ideal bend to lattice 
+d5p2_bend = True  # True or False: Add ideal bend to lattice 
 
 
 if d5p1_bend:
@@ -381,6 +426,12 @@ if d5p1_bend:
   equivalent_ideal_R = (d5p1_ze - d5p1_zs)/(pi/2.)
   equivalent_ideal_B = sqrt( A_ref*ekin_per_u*jperev*2.*A_ref*amu)/(Q_ref*jperev)/equivalent_ideal_R
   addnewbend(zs = d5p1_zs, ze = d5p1_ze, rc = equivalent_ideal_R)
+
+if d5p2_bend:
+  top.diposet = False     # turn off By that automatically generated with addnewbend()
+  equivalent_ideal_R = (d5p2_ze - d5p2_zs)/(pi/2.)
+  equivalent_ideal_B = sqrt( A_ref*ekin_per_u*jperev*2.*A_ref*amu)/(Q_ref*jperev)/equivalent_ideal_R
+  addnewbend(zs = d5p2_zs, ze = d5p2_ze, rc = equivalent_ideal_R)
 
 
 dipole_exit = [[0.,0.],[0.,0.]]
@@ -430,24 +481,23 @@ q7t1p1_k1 = 8.2957122
 q7t1p2_k1 = -15.6040684
 q7t1p3_k1 = 7.51275015
 
+q7_design_len = 0.2068
+
 q7_aper_r = 7.5*cm
 
-gamma_ref = (ekin_per_u + amu_eV) / amu_eV
-v_ref = sqrt(1. - 1./gamma_ref**2)*clight
-brho_ref = (A_ref * sqrt((ekin_per_u + amu_eV)**2 - (amu_eV)**2)/clight) / Q_ref
+q7_str_mode = 1    # 0: electrode potential corresponds to kappa ; 1: equivalent focusing
+                   # must be 0 for ideal q7
 
-q7t1p1_str = abs(q7t1p1_k1)*brho_ref*v_ref*q7_aper_r**2/2
-q7t1p2_str = abs(q7t1p2_k1)*brho_ref*v_ref*q7_aper_r**2/2
-q7t1p3_str = abs(q7t1p3_k1)*brho_ref*v_ref*q7_aper_r**2/2
+inter_quad_distance = 0.335 # centroid distance between two quads in a triplet
 
 # --- element specification 
 
-q7t1p1_zc = 70.537759 # (q7: Q7 device type; t1: 1st triplet; p1: part 1)
+## 1st triplet
+q7t1p1_zc = d5p1_zc + 0.95 # (q7: Q7 device type; t1: 1st triplet; p1: part 1)
+#q7t1p1_zc = 70.537759 # (q7: Q7 device type; t1: 1st triplet; p1: part 1)
 #q7t1p1_str = 10000 # [V]
 q7t1p1_sign = 1    # +1 for x_quad, -1 for y_quad
 q7t1p1_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field
-
-inter_quad_distance = 0.335 # centroid distance between two quads in a triplet
 
 q7t1p2_zc = q7t1p1_zc + inter_quad_distance
 #q7t1p2_str = 10000 # [V]
@@ -458,6 +508,23 @@ q7t1p3_zc = q7t1p2_zc + inter_quad_distance
 #q7t1p3_str = 10000 # [V]
 q7t1p3_sign = 1    # +1 for x_quad, -1 for y_quad
 q7t1p3_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field  
+
+## 2nd triplet
+q7t2p1_zc = d5p1_zc + 2.58 # (q7: Q7 device type; t2: 2nd triplet; p1: part 1)
+#q7t2p1_zc = 72.161896 # (q7: Q7 device type; t2: 2nd triplet; p1: part 1)
+#q7t1p1_str = 10000 # [V]
+q7t2p1_sign = 1    # +1 for x_quad, -1 for y_quad
+q7t2p1_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field
+
+q7t2p2_zc = q7t2p1_zc + inter_quad_distance
+#q7t1p2_str = 10000 # [V]
+q7t2p2_sign = -1   # +1 for x_quad, -1 for y_quad
+q7t2p2_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field
+
+q7t2p3_zc = q7t2p2_zc + inter_quad_distance
+#q7t1p3_str = 10000 # [V]
+q7t2p3_sign = 1    # +1 for x_quad, -1 for y_quad
+q7t2p3_typ = "nl"  # type: "lin" = linear optics fields or "nl" = nonlinear r-z field  
 
 ## --- linear element data  
 ##fi = PRpickle.PR("lat_q7/lat_q7.lin.????.pkl")
@@ -503,11 +570,36 @@ q7_y_m_min = q7_y_m.min()
 q7_nl_id = addnewegrddataset(dx=q7_dx,dy=q7_dy,zlength=q7_zlen,ex=q7_ex_m,ey=q7_ey_m,ez=q7_ez_m)  # pass arb dy to avoid error trap  
 
 
+
+if q7_str_mode == 0:
+    q7t1p1_str = abs(q7t1p1_k1)*ref_brho_post_gap*ref_vel_post_gap*q7_aper_r**2/2
+    q7t1p2_str = abs(q7t1p2_k1)*ref_brho_post_gap*ref_vel_post_gap*q7_aper_r**2/2
+    q7t1p3_str = abs(q7t1p3_k1)*ref_brho_post_gap*ref_vel_post_gap*q7_aper_r**2/2
+
+if q7_str_mode == 1:
+	dEx_array = q7_ex_m[51][50] - q7_ex_m[49][50]  # difference of E at two sets of mesh points along z
+	dExdx_array = dEx_array / (2*q7_dx)            # approximate dExdx at the centre
+	normalized_sum = sum(dExdx_array)*q7_dz        
+	design_Gl_p1 = q7t1p1_k1*ref_brho_post_gap*ref_vel_post_gap*q7_design_len
+	design_Gl_p2 = q7t1p2_k1*ref_brho_post_gap*ref_vel_post_gap*q7_design_len
+	design_Gl_p3 = q7t1p3_k1*ref_brho_post_gap*ref_vel_post_gap*q7_design_len
+	q7t1p1_str = abs(design_Gl_p1/normalized_sum)
+	q7t1p2_str = abs(design_Gl_p2/normalized_sum)
+	q7t1p3_str = abs(design_Gl_p3/normalized_sum)
+
+q7t2p1_str = q7t1p3_str
+q7t2p2_str = q7t1p2_str
+q7t2p3_str = q7t1p1_str
+
+
+
 # --- define esq q7 1st triplet part 1 
 if q7t1p1_typ == "lin":
   q7t1p1 = addnewmmlt(zs=q7t1p1_zc-q7_zlen/2.,ze=q7t1p1_zc+q7_zlen/2.,id=q7_lin_id,sc=q7t1p1_str*q7t1p1_sign) 
 elif q7t1p1_typ == "nl":
-  q7t1p1 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t1p1_zc-q7_zlen/2.,ze=q7t1p1_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t1p1_str*q7t1p1_sign) 
+  q7t1p1 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t1p1_zc-q7_zlen/2.,ze=q7t1p1_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t1p1_str*q7t1p1_sign)
+elif q7t1p1_typ == "ideal":
+  q7t1p1 = addnewequad(zs = q7t1p1_zc-q7_design_len/2., ze = q7t1p1_zc+q7_design_len/2., de = q7t1p1_str*q7t1p1_sign)
 else:
   print("Warning: No S4 1st Solenoid Applied Fields Defined") 
   q7t1p1 = None
@@ -517,6 +609,8 @@ if q7t1p2_typ == "lin":
   q7t1p2 = addnewmmlt(zs=q7t1p2_zc-q7_zlen/2.,ze=q7t1p2_zc+q7_zlen/2.,id=q7_lin_id,sc=q7t1p2_str*q7t1p2_sign) 
 elif q7t1p2_typ == "nl":
   q7t1p2 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t1p2_zc-q7_zlen/2.,ze=q7t1p2_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t1p2_str*q7t1p2_sign) 
+elif q7t1p2_typ == "ideal":
+  q7t1p2 = addnewequad(zs = q7t1p2_zc-q7_design_len/2., ze = q7t1p2_zc+q7_design_len/2., de = q7t1p2_str*q7t1p2_sign)
 else:
   print("Warning: No S4 1st Solenoid Applied Fields Defined") 
   q7t1p2 = None
@@ -525,10 +619,45 @@ else:
 if q7t1p3_typ == "lin":
   q7t1p3 = addnewmmlt(zs=q7t1p3_zc-q7_zlen/2.,ze=q7t1p3_zc+q7_zlen/2.,id=q7_lin_id,sc=q7t1p3_str*q7t1p3_sign) 
 elif q7t1p3_typ == "nl":
-  q7t1p3 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t1p3_zc-q7_zlen/2.,ze=q7t1p3_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t1p3_str*q7t1p3_sign) 
+  q7t1p3 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t1p3_zc-q7_zlen/2.,ze=q7t1p3_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t1p3_str*q7t1p3_sign)
+elif q7t1p3_typ == "ideal":
+  q7t1p3 = addnewequad(zs = q7t1p3_zc-q7_design_len/2., ze = q7t1p3_zc+q7_design_len/2., de = q7t1p3_str*q7t1p3_sign) 
 else:
   print("Warning: No S4 1st Solenoid Applied Fields Defined") 
   q7t1p3 = None
+
+# --- define esq q7 2nd triplet part 1 
+if q7t2p1_typ == "lin":
+  q7t2p1 = addnewmmlt(zs=q7t2p1_zc-q7_zlen/2.,ze=q7t2p1_zc+q7_zlen/2.,id=q7_lin_id,sc=q7t2p1_str*q7t2p1_sign) 
+elif q7t2p1_typ == "nl":
+  q7t2p1 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t2p1_zc-q7_zlen/2.,ze=q7t2p1_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t2p1_str*q7t2p1_sign)
+elif q7t2p1_typ == "ideal":
+  q7t2p1 = addnewequad(zs = q7t2p1_zc-q7_design_len/2., ze = q7t2p1_zc+q7_design_len/2., de = q7t2p1_str*q7t2p1_sign) 
+else:
+  print("Warning: No S4 1st Solenoid Applied Fields Defined") 
+  q7t2p1 = None
+
+# --- define esq q7 2nd triplet part 2
+if q7t2p2_typ == "lin":
+  q7t2p2 = addnewmmlt(zs=q7t2p2_zc-q7_zlen/2.,ze=q7t2p2_zc+q7_zlen/2.,id=q7_lin_id,sc=q7t2p2_str*q7t2p2_sign) 
+elif q7t2p2_typ == "nl":
+  q7t2p2 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t2p2_zc-q7_zlen/2.,ze=q7t2p2_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t2p2_str*q7t2p2_sign)
+elif q7t2p2_typ == "ideal":
+  q7t2p2 = addnewequad(zs = q7t2p2_zc-q7_design_len/2., ze = q7t2p2_zc+q7_design_len/2., de = q7t2p2_str*q7t2p2_sign)  
+else:
+  print("Warning: No S4 1st Solenoid Applied Fields Defined") 
+  q7t2p2 = None
+
+# --- define esq q7 2nd triplet part 3
+if q7t2p3_typ == "lin":
+  q7t2p3 = addnewmmlt(zs=q7t2p3_zc-q7_zlen/2.,ze=q7t2p3_zc+q7_zlen/2.,id=q7_lin_id,sc=q7t2p3_str*q7t2p3_sign) 
+elif q7t2p3_typ == "nl":
+  q7t2p3 = addnewegrd(xs=q7_x_m_min,ys=q7_y_m_min,zs=q7t2p3_zc-q7_zlen/2.,ze=q7t2p3_zc+q7_zlen/2.,id=q7_nl_id,sc=q7t2p3_str*q7t2p3_sign) 
+elif q7t2p3_typ == "ideal":
+  q7t2p3 = addnewequad(zs = q7t2p3_zc-q7_design_len/2., ze = q7t2p3_zc+q7_design_len/2., de = q7t2p3_str*q7t2p3_sign)  
+else:
+  print("Warning: No S4 1st Solenoid Applied Fields Defined") 
+  q7t2p3 = None
 
 
 
