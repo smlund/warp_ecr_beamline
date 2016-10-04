@@ -69,11 +69,11 @@ else:
 # --- element specification 
 
 s4p1_zc  = 66.956900   # S4 1: z-center  
-s4p1_str = 0.6 # 0.754 # S4 1: peak on-axis B_z field strength [Tesla]
+s4p1_str = 0.53 # 0.754 # S4 1: peak on-axis B_z field strength [Tesla]
 s4p1_typ = "nl"        # S4 1: type: "lin" = linear optics fields or "nl" = nonlinear r-z field  
 
 s4p2_zc  = 68.306900   # S4 2: z-center 
-s4p2_str = 0.5 # 0.617 # s4 2: peak on-axis B_z field strength [Tesla]
+s4p2_str = 0.43 # 0.617 # s4 2: peak on-axis B_z field strength [Tesla]
 s4p2_typ = "nl"        # S4 1: type: "lin" = linear optics fields or "nl" = nonlinear r-z field  
 
 # --- linear element data  
@@ -727,7 +727,8 @@ d5p1_aperture = [d5p1_aperture_out - d5p1_aperture_in]
 
 ## Gate valve
 
-valve_x_opening = 7*cm
+#valve_x_opening = 7*cm
+valve_x_opening = 10*cm
 valve_y_opening = 10*cm
 valve_len = 4*mm
 valve_zc = q7t1p1_zc - 140*mm
@@ -766,8 +767,10 @@ q7t1_endplates = [q7t1_endplate_1,q7t1_endplate_2,q7t1_endplate_3,q7t1_endplate_
 q7t1_mid_12 = (q7t1p1_zc+q7t1p2_zc)/2  # mid-point between 1st and 2nd ESQ 
 q7t1_mid_23 = (q7t1p2_zc+q7t1p3_zc)/2  # mid-point between 2nd and 3rd ESQ 
 
-slits1_x_opening = 7*cm
-slits2_x_opening = 9*cm
+#slits1_x_opening = 7*cm
+slits1_x_opening = 10*cm
+#slits2_x_opening = 9*cm
+slits2_x_opening = 10*cm
 slit_xsize = 8*cm
 slit_ysize = 15*cm
 slit_len = 4*mm
@@ -799,13 +802,29 @@ def q7_electrodes_conductor(zcenter):
 	return [electrode_xplus, electrode_xminus, electrode_yplus, electrode_yminus]
 
 
+# 4-jaw Collimators
 
+# Approximate by two slits, since only the x-direction really matters
+# x-opening: from -2 cm to 6.5 cm
+
+four_jaw_z = (q7t1p3_zc+q7t2p1_zc)/2  # mid-point between 1st and 2nd ESQ 
+
+four_jaw_opening_xplus = 6.5*cm
+four_jaw_opening_xminus = 2*cm
+slit_xsize = 8*cm
+slit_ysize = 15*cm
+slit_len = 4*mm
+
+four_jaw_xplus = Box(xsize = slit_xsize, ysize = slit_ysize, zsize = slit_len, xcent = four_jaw_opening_xplus + slit_xsize/2., ycent = 0, zcent = four_jaw_z)
+four_jaw_xminus = Box(xsize = slit_xsize, ysize = slit_ysize, zsize = slit_len, xcent = -four_jaw_opening_xminus - slit_xsize/2., ycent = 0, zcent = four_jaw_z)
+
+four_jaw = [four_jaw_xplus, four_jaw_xminus]
 
 
 
 #scraper = ParticleScraper([q7t1_endplate_1,q7t1_endplate_2,q7t1_endplate_3,q7t1_endplate_4,q7t1_endplate_5,q7t1_endplate_6])
 
-scraperlist = beampipe + d5p1_aperture + gate_valve + q7t1_endplates + q7t1_slits + q7_electrodes_conductor(q7t1p1_zc) + q7_electrodes_conductor(q7t1p2_zc) + q7_electrodes_conductor(q7t1p3_zc)
+scraperlist = beampipe + d5p1_aperture + gate_valve + q7t1_endplates + q7t1_slits + q7_electrodes_conductor(q7t1p1_zc) + q7_electrodes_conductor(q7t1p2_zc) + q7_electrodes_conductor(q7t1p3_zc) + four_jaw
 
 scraper = ParticleScraper(scraperlist)
 
