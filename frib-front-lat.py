@@ -750,12 +750,12 @@ gate_valve = [valve_x_plus, valve_x_minus, valve_y_plus, valve_y_minus]
 endplate_len = 4*mm
 endplate_aperture = 65*mm
 
-q7t1_endplate_1 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p1_zc - 19.5*mm)
-q7t1_endplate_2 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p1_zc + 19.5*mm)
-q7t1_endplate_3 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p2_zc - 19.5*mm)
-q7t1_endplate_4 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p2_zc + 19.5*mm)
-q7t1_endplate_5 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p3_zc - 19.5*mm)
-q7t1_endplate_6 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p3_zc + 19.5*mm)
+q7t1_endplate_1 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p1_zs - 19.5*mm)
+q7t1_endplate_2 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p1_ze + 19.5*mm)
+q7t1_endplate_3 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p2_zs - 19.5*mm)
+q7t1_endplate_4 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p2_ze + 19.5*mm)
+q7t1_endplate_5 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p3_zs - 19.5*mm)
+q7t1_endplate_6 = ZCylinderOut(endplate_aperture, endplate_len, zcent= q7t1p3_ze + 19.5*mm)
 
 q7t1_endplates = [q7t1_endplate_1,q7t1_endplate_2,q7t1_endplate_3,q7t1_endplate_4,q7t1_endplate_5,q7t1_endplate_6]
 
