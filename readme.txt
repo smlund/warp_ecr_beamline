@@ -43,6 +43,8 @@ me if you want to contribute and I will add you)
   % git commit -m "SML: updated readme.txt file" 
   % git push 
 
+You may be need to enter your git username and password in this step.  
+
 To remove a file from git control (to not include in future pulls), use 
 
   % git rm file
