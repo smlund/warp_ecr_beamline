@@ -51,7 +51,6 @@ To remove a file from git control (to not include in future pulls), use
 
 The local copy of the file removed can be retained on disk by subsituting
 
-
   % git rm --cached file 
 
 in the above.  Another way to remove a file from the master node repo is to
@@ -73,8 +72,12 @@ Run this executable script using:
 
 This script and the linked Dropbox account must be maintained consistently
 as lattice element descriptions change. Code users may want access to the
-Dropbox account which contains much info/input on the generation of lattice
+Dropbox account which contains much info/input on the generation of the 
+lattice. Contact Steve Lund for access if you have a dropbox account and this 
+account can be "shared" with you. Note that this directories is large due to the 
+size of field element arrays and shared account contribute to a dropbox users 
+quota. So a larger (paid) dropbox account would likely be needed for full sharing. 
 element field files, code input (Poisson, CST Studio, ...), element plots,
-etc. Contact Steve Lund for access.
+etc.
 
 
