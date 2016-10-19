@@ -26,12 +26,16 @@ fukushim@frib.msu.edu
 
 To initialize the repository, 
 
-   % git clone https://github.com/smlund/warp_ion_frontend
+To initialize the repository, 
+ https form
+   % git clone https://github.com/smlund/warp_ion_frontend.git 
+ ssh form (can have permission problems depending on setup) 
+   % git clone git@github.com:smlund/warp_ion_frontend.git 
 
 This will create a directory, ./warp_ion_frontend where command was 
 run with the archive files.   
 
-To get the latest version descend into directory warp_ion_beamline and run:
+To get the latest version descend into directory warp_ion_frontend and run:
 
   % git pull 
 
