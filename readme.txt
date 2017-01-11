@@ -61,7 +61,19 @@ The local copy of the file removed can be retained on disk by subsituting
 
 in the above.  Another way to remove a file from the master node repo is to
 go to the github web side, click on a file, click the delete button and then
-confirm at the bottom of the page.   
+confirm at the bottom of the page.
+
+The file removal procedures above  will NOT remove the file from the
+history within git. This is preferable in most cases.  However, when a git
+repo is cloned, if a large file (say binary) was contained at one point and
+deleted, it will be downloaded (and then deleted) in progression used
+to generate the repo on the local machine. This can be a problem. To remove
+all traces of such a file "file.pkl" from the repo, you can run:
+
+  % git filter-branch -f --index-filter 'git rm --cached --ignore-unmatch file.pkl'
+
+This should ONLY be used in cases where it is really needed (large files that
+should not be there).  
 
 Field files needed for the lattices described by the simulation are stored
 in the Dropbox file sharing system. Code users do NOT need dropbox access
