@@ -72,6 +72,10 @@ all traces of such a file "file.pkl" from the repo, you can run:
 
   % git filter-branch -f --index-filter 'git rm --cached --ignore-unmatch file.pkl'
 
+Another command that can help:
+
+  % git filter-branch -f --tree-filter "rm -rf *.pkl" --prune-empty -- --all
+
 This should ONLY be used in cases where it is really needed (large files that
 should not be there).  
 
